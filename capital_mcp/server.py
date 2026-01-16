@@ -1594,6 +1594,247 @@ async def position_review() -> list[dict[str, str]]:
 
 
 # ============================================================
+# MCP Resources (Read-Only Data)
+# ============================================================
+
+
+@mcp.resource("cap://status")
+async def cap_status_resource() -> dict[str, Any]:
+    """
+    Server status and session information.
+
+    Provides current server health, session state, authentication status,
+    and rate limit information. Useful for monitoring and debugging.
+    """
+    session = get_session_manager()
+    status = session.get_status()
+
+    config = get_config()
+    risk = get_risk_engine()
+
+    return {
+        "server": {
+            "name": "Capital.com MCP Server",
+            "version": "0.1.0",
+            "trading_enabled": config.TRADING_ENABLED,
+        },
+        "session": {
+            "is_logged_in": status.is_logged_in,
+            "account_id": status.account_id,
+            "cst_token": "***" if status.cst_token else None,
+            "x_security_token": "***" if status.x_security_token else None,
+            "last_activity": status.last_activity.isoformat() if status.last_activity else None,
+        },
+        "risk": {
+            "trading_enabled": config.TRADING_ENABLED,
+            "allowed_epics": list(risk.get_allowed_epics()),
+            "allowlist_mode": "ALL" if "ALL" in risk.get_allowed_epics() else "SPECIFIC",
+        },
+        "rate_limits": {
+            "requests_per_second": "10",
+            "note": "Capital.com enforces 10 req/s limit",
+        },
+    }
+
+
+@mcp.resource("cap://risk-policy")
+async def cap_risk_policy_resource() -> dict[str, Any]:
+    """
+    Current risk management policy configuration.
+
+    Shows all active risk controls, safety checks, and trading restrictions.
+    Includes allowlist configuration, trading toggles, and validation rules.
+    """
+    config = get_config()
+    risk = get_risk_engine()
+
+    return {
+        "trading_enabled": config.TRADING_ENABLED,
+        "two_phase_execution": True,
+        "description": "All trades require preview → explicit execution",
+        "allowlist": {
+            "mode": "ALL" if "ALL" in risk.get_allowed_epics() else "SPECIFIC",
+            "epics": list(risk.get_allowed_epics()),
+            "note": "Only markets on this list can be traded (ALL = wildcard)",
+        },
+        "validation_layers": [
+            "1. Trading enabled check (TRADING_ENABLED env var)",
+            "2. Epic allowlist check (must be in ALLOWED_EPICS)",
+            "3. Two-phase execution (preview before execute)",
+            "4. Order size validation (non-zero, non-negative)",
+            "5. Stop/limit distance validation (positive)",
+            "6. Direction validation (BUY/SELL only)",
+            "7. Session authentication check",
+            "8. Rate limit compliance (10 req/s broker limit)",
+            "9. Deal reference validation (execute must match preview)",
+            "10. Broker-side validation (final gateway)",
+        ],
+        "safety_features": {
+            "preview_required": True,
+            "deal_reference_matching": True,
+            "authentication_required": True,
+            "rate_limiting": True,
+            "input_validation": True,
+        },
+    }
+
+
+@mcp.resource("cap://allowed-epics")
+async def cap_allowed_epics_resource() -> dict[str, Any]:
+    """
+    Trading allowlist configuration.
+
+    Lists all markets (epics) that are permitted for trading operations.
+    If "ALL" is present, all markets are allowed (wildcard mode).
+    """
+    risk = get_risk_engine()
+    config = get_config()
+
+    epics = list(risk.get_allowed_epics())
+    has_wildcard = "ALL" in epics
+
+    return {
+        "mode": "WILDCARD" if has_wildcard else "SPECIFIC",
+        "allowed_epics": epics,
+        "count": len(epics),
+        "trading_enabled": config.TRADING_ENABLED,
+        "description": (
+            "Wildcard mode: ALL markets allowed"
+            if has_wildcard
+            else f"Restricted mode: {len(epics)} specific markets allowed"
+        ),
+        "configuration": {
+            "env_var": "ALLOWED_EPICS",
+            "example": "ALLOWED_EPICS=GOLD,SILVER,BTCUSD",
+            "wildcard": "ALLOWED_EPICS=ALL (allows all markets)",
+        },
+    }
+
+
+@mcp.resource("cap://watchlists")
+async def cap_watchlists_resource() -> dict[str, Any]:
+    """
+    All user watchlists with their markets.
+
+    Provides a comprehensive view of all watchlists and the markets they contain.
+    Requires authentication. Fetches live data from Capital.com API.
+
+    Note: This makes multiple API calls (1 + N for N watchlists). Be mindful of rate limits.
+    """
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    client = get_client()
+
+    # Get all watchlists
+    response = await client.get("/watchlists")
+    watchlists = response.json().get("watchlists", [])
+
+    # Fetch markets for each watchlist
+    result = []
+    for wl in watchlists:
+        wl_id = wl.get("id")
+        wl_name = wl.get("name")
+
+        # Get markets in this watchlist
+        markets_response = await client.get(f"/watchlists/{wl_id}")
+        markets = markets_response.json().get("markets", [])
+
+        result.append(
+            {
+                "id": wl_id,
+                "name": wl_name,
+                "default": wl.get("defaultSystemWatchlist", False),
+                "editable": wl.get("editable", True),
+                "deleteable": wl.get("deleteable", True),
+                "market_count": len(markets),
+                "markets": [
+                    {
+                        "epic": m.get("epic"),
+                        "instrument_name": m.get("instrumentName"),
+                        "market_status": m.get("marketStatus"),
+                    }
+                    for m in markets
+                ],
+            }
+        )
+
+    return {
+        "watchlists": result,
+        "total_count": len(result),
+        "timestamp": (
+            session.get_status().last_activity.isoformat()
+            if session.get_status().last_activity
+            else None
+        ),
+    }
+
+
+@mcp.resource("cap://market-cache/{epic}")
+async def cap_market_cache_resource(epic: str) -> dict[str, Any]:
+    """
+    Cached market details for a specific epic.
+
+    Returns detailed market information including trading hours, margins,
+    sizes, and currency. This is a live fetch (no actual cache yet).
+
+    Args:
+        epic: Market identifier (e.g., "GOLD", "SILVER", "CS.D.EURUSD.TODAY.IP")
+    """
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    client = get_client()
+
+    # Fetch market details
+    response = await client.get(f"/markets/{epic}")
+    data = response.json()
+
+    snapshot = data.get("snapshot", {})
+    instrument = data.get("instrument", {})
+    dealing_rules = instrument.get("dealingRules", {})
+
+    return {
+        "epic": epic,
+        "instrument_name": instrument.get("name"),
+        "instrument_type": instrument.get("type"),
+        "currency": (
+            instrument.get("currencies", [{}])[0].get("code")
+            if instrument.get("currencies")
+            else None
+        ),
+        "snapshot": {
+            "market_status": snapshot.get("marketStatus"),
+            "bid": snapshot.get("bid"),
+            "offer": snapshot.get("offer"),
+            "update_time": snapshot.get("updateTime"),
+        },
+        "dealing": {
+            "min_size": dealing_rules.get("minDealSize", {}).get("value"),
+            "max_size": dealing_rules.get("maxDealSize", {}).get("value"),
+            "min_step": dealing_rules.get("minStepDistance", {}).get("value"),
+            "min_stop_distance": dealing_rules.get("minNormalStopOrLimitDistance", {}).get(
+                "value"
+            ),
+        },
+        "margin": {
+            "factor": instrument.get("margin"),
+            "unit": (
+                instrument.get("marginDepositBands", [{}])[0].get("unit")
+                if instrument.get("marginDepositBands")
+                else None
+            ),
+        },
+        "opening_hours": instrument.get("openingHours"),
+        "cached_at": (
+            session.get_status().last_activity.isoformat()
+            if session.get_status().last_activity
+            else None
+        ),
+    }
+
+
+# ============================================================
 # Server Lifecycle
 # ============================================================
 

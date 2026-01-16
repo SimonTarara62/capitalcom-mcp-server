@@ -268,14 +268,14 @@ capital-mcp/
 
 ---
 
-## What's NOT Built (Remaining 25%)
+## What's NOT Built (Remaining 20%)
 
-### Phase 5: MCP Resources (0% Complete)
-- ⏳ `cap://status` - Server status resource
-- ⏳ `cap://risk-policy` - Risk policy resource
-- ⏳ `cap://allowed-epics` - Allowlist resource
-- ⏳ `cap://watchlists` - Watchlists resource
-- ⏳ `cap://market-cache/{epic}` - Market cache resource
+### Phase 5: MCP Resources (100% Complete)
+- ✅ `cap://status` - Server status resource
+- ✅ `cap://risk-policy` - Risk policy resource
+- ✅ `cap://allowed-epics` - Allowlist resource
+- ✅ `cap://watchlists` - Watchlists resource
+- ✅ `cap://market-cache/{epic}` - Market cache resource
 
 ### Phase 6: MCP Prompts (100% Complete)
 - ✅ Market scan workflow prompt
@@ -321,11 +321,11 @@ capital-mcp/
 - ✅ **Phase 2**: API Client Layer (100%)
 - ✅ **Phase 3**: Risk & Safety (100%)
 - ✅ **Phase 4**: MCP Tools (100% - 36 tools)
-- ⏳ **Phase 5**: MCP Resources (0%)
+- ✅ **Phase 5**: MCP Resources (100% - 5 resources)
 - ✅ **Phase 6**: MCP Prompts (100% - 4 workflows)
 - ⏳ **Phase 7**: Testing & WebSocket (0%)
 
-**Overall Completion**: ~75% of full specification
+**Overall Completion**: ~80% of full specification
 
 ### Specification Checklist
 - **Foundation**: 5/5 ✅
@@ -338,7 +338,7 @@ capital-mcp/
 - **MCP Tools - Trading (Preview)**: 2/2 ✅
 - **MCP Tools - Trading (Execute)**: 4/6 ✅ (missing update position/order)
 - **MCP Tools - Watchlists**: 6/6 ✅
-- **MCP Resources**: 0/5 ⏳
+- **MCP Resources**: 5/5 ✅
 - **MCP Prompts**: 4/4 ✅
 - **Optional WebSocket**: 0/7 ⏳
 - **Testing**: 0/4 ⏳
@@ -431,9 +431,8 @@ Restart Claude Desktop. Ask: "What Capital.com tools are available?"
 
 ### Short-Term (Next Session)
 1. Add missing 2 tools (update position/order)
-2. Implement MCP Resources (5 resources)
-3. Test with real Capital.com Demo account
-4. Fix any discovered bugs
+2. Test with real Capital.com Demo account
+3. Fix any discovered bugs
 
 ### Medium-Term
 1. Unit test suite
@@ -452,7 +451,7 @@ Restart Claude Desktop. Ask: "What Capital.com tools are available?"
 
 ## Conclusion
 
-The Capital.com MCP Server is **70% complete** and **fully functional** for its core purpose:
+The Capital.com MCP Server is **80% complete** and **fully functional** for its core purpose:
 
 ✅ **Enables safe LLM-driven trading** via Model Context Protocol
 ✅ **36 tools** covering session, market data, account, trading, and watchlists
@@ -466,8 +465,7 @@ The server can be used **immediately** for:
 - Demo account trading (with safety controls)
 - Integration with Claude Desktop, Cursor, Windsurf
 
-**Remaining work** (25%) is primarily:
-- MCP Resources (quality-of-life features)
+**Remaining work** (20%) is primarily:
 - WebSocket support (optional real-time data)
 - Testing suite (quality assurance)
 - 2 missing tools (update operations)

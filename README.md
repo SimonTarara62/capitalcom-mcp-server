@@ -17,7 +17,7 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 
 ## Current Implementation Status
 
-**Overall: 75% Complete** (Phases 1-6 done, Phase 7 pending)
+**Overall: 80% Complete** (Phases 1-6 done, Phase 7 pending)
 
 ### ✅ Completed (Phases 1-6)
 
@@ -45,14 +45,14 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ execute_trade - Execute previewed trades safely
 - ✅ position_review - Analyze portfolio positions and orders
 
-### 📋 Pending (Phase 5, 7)
+**MCP Resources (5 read-only resources implemented)**
+- ✅ cap://status - Server and session status
+- ✅ cap://risk-policy - Risk management configuration
+- ✅ cap://allowed-epics - Trading allowlist
+- ✅ cap://watchlists - All watchlists with markets
+- ✅ cap://market-cache/{epic} - Market details (dynamic)
 
-**Phase 5: MCP Resources**
-- ⏳ cap://status - Server status resource
-- ⏳ cap://risk-policy - Risk policy resource
-- ⏳ cap://allowed-epics - Allowlist resource
-- ⏳ cap://watchlists - Watchlists resource
-- ⏳ cap://market-cache/{epic} - Market cache resource
+### 📋 Pending (Phase 7)
 
 **Phase 7: Testing & Optional Features**
 - ⏳ WebSocket support (optional, live streaming)
@@ -580,6 +580,220 @@ Claude: [Invokes position_review prompt, analyzes portfolio]
 ```
 
 Prompts provide structured guidance while maintaining safety controls throughout the workflow.
+
+## MCP Resources (Read-Only Data)
+
+MCP resources provide read-only access to server state and configuration through URI-based resources. Unlike tools (which perform actions), resources expose data that clients can read and monitor.
+
+### Available Resources
+
+#### 1. `cap://status` - Server Status
+
+Real-time server and session information.
+
+**Returns**: JSON with server health, session state, authentication status, rate limits
+
+**Example**:
+```json
+{
+  "server": {
+    "name": "Capital.com MCP Server",
+    "version": "0.1.0",
+    "trading_enabled": true
+  },
+  "session": {
+    "is_logged_in": true,
+    "account_id": "ABC123",
+    "last_activity": "2026-01-16T10:30:00"
+  },
+  "risk": {
+    "trading_enabled": true,
+    "allowed_epics": ["GOLD", "SILVER"],
+    "allowlist_mode": "SPECIFIC"
+  },
+  "rate_limits": {
+    "requests_per_second": "10",
+    "note": "Capital.com enforces 10 req/s limit"
+  }
+}
+```
+
+**Use Cases**: Monitor server health, check session status, debug authentication issues
+
+---
+
+#### 2. `cap://risk-policy` - Risk Policy
+
+Comprehensive risk management configuration and safety controls.
+
+**Returns**: JSON with all validation layers, safety features, and trading restrictions
+
+**Example**:
+```json
+{
+  "trading_enabled": true,
+  "two_phase_execution": true,
+  "description": "All trades require preview → explicit execution",
+  "allowlist": {
+    "mode": "SPECIFIC",
+    "epics": ["GOLD", "SILVER"],
+    "note": "Only markets on this list can be traded (ALL = wildcard)"
+  },
+  "validation_layers": [
+    "1. Trading enabled check (TRADING_ENABLED env var)",
+    "2. Epic allowlist check (must be in ALLOWED_EPICS)",
+    "... 10 total layers ..."
+  ],
+  "safety_features": {
+    "preview_required": true,
+    "deal_reference_matching": true,
+    "authentication_required": true,
+    "rate_limiting": true,
+    "input_validation": true
+  }
+}
+```
+
+**Use Cases**: Understand active safety controls, audit risk configuration, compliance documentation
+
+---
+
+#### 3. `cap://allowed-epics` - Trading Allowlist
+
+Current trading allowlist configuration showing permitted markets.
+
+**Returns**: JSON with allowlist mode, permitted epics, and configuration instructions
+
+**Example**:
+```json
+{
+  "mode": "SPECIFIC",
+  "allowed_epics": ["GOLD", "SILVER", "BTCUSD"],
+  "count": 3,
+  "trading_enabled": true,
+  "description": "Restricted mode: 3 specific markets allowed",
+  "configuration": {
+    "env_var": "ALLOWED_EPICS",
+    "example": "ALLOWED_EPICS=GOLD,SILVER,BTCUSD",
+    "wildcard": "ALLOWED_EPICS=ALL (allows all markets)"
+  }
+}
+```
+
+**Use Cases**: Check which markets are tradeable, verify allowlist configuration
+
+---
+
+#### 4. `cap://watchlists` - All Watchlists
+
+All user watchlists with their markets (live data from broker).
+
+**Returns**: JSON with all watchlists, market details, and metadata
+
+**Authentication**: Required
+
+**Example**:
+```json
+{
+  "watchlists": [
+    {
+      "id": "12345",
+      "name": "My Metals",
+      "default": false,
+      "editable": true,
+      "deleteable": true,
+      "market_count": 2,
+      "markets": [
+        {
+          "epic": "GOLD",
+          "instrument_name": "Spot Gold",
+          "market_status": "TRADEABLE"
+        },
+        {
+          "epic": "SILVER",
+          "instrument_name": "Spot Silver",
+          "market_status": "TRADEABLE"
+        }
+      ]
+    }
+  ],
+  "total_count": 1,
+  "timestamp": "2026-01-16T10:30:00"
+}
+```
+
+**Note**: Makes N+1 API calls (1 for list + 1 per watchlist). Be mindful of rate limits.
+
+**Use Cases**: Browse all watchlists, analyze watchlist composition, export watchlist data
+
+---
+
+#### 5. `cap://market-cache/{epic}` - Market Details (Dynamic)
+
+Cached market details for a specific epic (live fetch from broker).
+
+**Parameters**:
+- `epic` - Market identifier (e.g., "GOLD", "SILVER", "CS.D.EURUSD.TODAY.IP")
+
+**Returns**: JSON with comprehensive market information
+
+**Authentication**: Required
+
+**Example**: `cap://market-cache/GOLD`
+
+```json
+{
+  "epic": "GOLD",
+  "instrument_name": "Spot Gold",
+  "instrument_type": "COMMODITIES",
+  "currency": "USD",
+  "snapshot": {
+    "market_status": "TRADEABLE",
+    "bid": 2050.50,
+    "offer": 2050.75,
+    "update_time": "2026-01-16T10:30:00"
+  },
+  "dealing": {
+    "min_size": 0.1,
+    "max_size": 100.0,
+    "min_step": 0.1,
+    "min_stop_distance": 5.0
+  },
+  "margin": {
+    "factor": 5.0,
+    "unit": "PERCENTAGE"
+  },
+  "opening_hours": {...},
+  "cached_at": "2026-01-16T10:30:00"
+}
+```
+
+**Use Cases**: Get market details, check trading rules, analyze margin requirements
+
+---
+
+### How to Use Resources
+
+In Claude Desktop or other MCP clients, resources can be accessed by URI:
+
+```
+User: "Show me the server status"
+Claude: [Reads cap://status resource, displays server health]
+
+User: "What's the risk policy?"
+Claude: [Reads cap://risk-policy resource, explains safety controls]
+
+User: "Which markets can I trade?"
+Claude: [Reads cap://allowed-epics resource, lists permitted epics]
+
+User: "Show all my watchlists"
+Claude: [Reads cap://watchlists resource, displays watchlist data]
+
+User: "Get details for GOLD market"
+Claude: [Reads cap://market-cache/GOLD resource, shows market info]
+```
+
+Resources provide a convenient way to inspect server state and configuration without running tools.
 
 ## Safety Model
 
