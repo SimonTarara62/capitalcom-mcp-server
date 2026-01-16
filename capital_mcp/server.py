@@ -420,6 +420,47 @@ async def cap_account_demo_topup(amount: float, confirm: bool = False) -> dict[s
 
 
 # ============================================================
+# Helper Functions
+# ============================================================
+
+
+async def _wait_for_confirmation(
+    deal_reference: str,
+    timeout_s: float = 15.0,
+    poll_interval_ms: int = 500
+) -> dict[str, Any]:
+    """
+    Helper function to wait for deal confirmation with polling.
+
+    This is extracted so it can be called by both the tool and internal functions.
+    """
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    client = get_client()
+
+    async def check_confirm() -> dict[str, Any]:
+        response = await client.get(f"/confirms/{deal_reference}")
+        return response.json()
+
+    def is_complete(data: dict[str, Any]) -> bool:
+        status = data.get("status")
+        return status in ("ACCEPTED", "REJECTED")
+
+    result_data = await poll_until(
+        check_confirm,
+        is_complete,
+        timeout_s=timeout_s,
+        poll_interval_ms=poll_interval_ms,
+    )
+
+    if result_data is None:
+        raise TimeoutError(f"Confirmation polling timed out after {timeout_s}s")
+
+    return result_data
+
+
+# ============================================================
 # Trading Tools - Read-only
 # ============================================================
 
@@ -513,30 +554,7 @@ async def cap_trade_confirm_wait(
     Returns final confirmation status.
     Requires authentication.
     """
-    session = get_session_manager()
-    await session.ensure_logged_in()
-
-    client = get_client()
-
-    async def check_confirm() -> dict[str, Any]:
-        response = await client.get(f"/confirms/{deal_reference}")
-        return response.json()
-
-    def is_complete(data: dict[str, Any]) -> bool:
-        status = data.get("status")
-        return status in ("ACCEPTED", "REJECTED")
-
-    result_data = await poll_until(
-        check_confirm,
-        is_complete,
-        timeout_s=timeout_s,
-        poll_interval_ms=poll_interval_ms,
-    )
-
-    if result_data is None:
-        raise TimeoutError(f"Confirmation polling timed out after {timeout_s}s")
-
-    return result_data
+    return await _wait_for_confirmation(deal_reference, timeout_s, poll_interval_ms)
 
 
 # ============================================================
@@ -774,7 +792,7 @@ async def cap_trade_execute_position(
     # Wait for confirmation if requested
     if wait_for_confirm and "dealReference" in data:
         try:
-            confirm_data = await cap_trade_confirm_wait(
+            confirm_data = await _wait_for_confirmation(
                 deal_reference=data["dealReference"],
                 timeout_s=timeout_s,
             )
@@ -856,7 +874,7 @@ async def cap_trade_execute_working_order(
     # Wait for confirmation if requested
     if wait_for_confirm and "dealReference" in data:
         try:
-            confirm_data = await cap_trade_confirm_wait(
+            confirm_data = await _wait_for_confirmation(
                 deal_reference=data["dealReference"],
                 timeout_s=timeout_s,
             )
@@ -901,7 +919,7 @@ async def cap_trade_positions_close(
     # Wait for confirmation if requested
     if wait_for_confirm and "dealReference" in data:
         try:
-            confirm_data = await cap_trade_confirm_wait(
+            confirm_data = await _wait_for_confirmation(
                 deal_reference=data["dealReference"],
                 timeout_s=timeout_s,
             )
@@ -946,7 +964,7 @@ async def cap_trade_orders_cancel(
     # Wait for confirmation if requested
     if wait_for_confirm and "dealReference" in data:
         try:
-            confirm_data = await cap_trade_confirm_wait(
+            confirm_data = await _wait_for_confirmation(
                 deal_reference=data["dealReference"],
                 timeout_s=timeout_s,
             )

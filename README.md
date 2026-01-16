@@ -2,14 +2,18 @@
 
 Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LLM-driven trading operations.
 
+> **⚠️ DISCLAIMER**: This is an **unofficial, community-built** project for educational and study purposes only. It is **NOT** affiliated with, endorsed by, or officially supported by Capital.com. This is an independent implementation of the Capital.com Open API for research and learning purposes.
+
 ## ⚠️ Important Safety Notice
 
 **Trading is risky. This software is for engineering/educational purposes and is NOT financial advice.**
 
+- This is an **unofficial community project** - not an official Capital.com product
 - Always start with a **Demo account** before considering live trading
 - Trading is **disabled by default** and requires explicit configuration
 - All trade operations require **two-phase execution** (preview → confirm → execute)
 - Built-in risk controls: allowlists, size limits, daily order caps
+- **Use at your own risk** - the authors assume no liability for trading losses
 
 ## Current Implementation Status
 
@@ -107,6 +111,29 @@ python -m capital_mcp.server
 # INFO - Trading enabled: False
 
 # Press Ctrl+C to stop
+```
+
+### Troubleshooting: Check Logs
+
+If you encounter issues when using the MCP server with Claude Desktop or other clients, check the log files:
+
+**macOS**:
+```bash
+# View MCP server logs
+tail -f ~/Library/Logs/Claude/mcp-server-capital-com.log
+
+# Search for errors
+grep -i error ~/Library/Logs/Claude/mcp-server-capital-com.log
+```
+
+**Linux**:
+```bash
+tail -f ~/.config/Claude/logs/mcp-server-capital-com.log
+```
+
+**Windows**:
+```powershell
+Get-Content $env:APPDATA\Claude\logs\mcp-server-capital-com.log -Wait
 ```
 
 ## Integration with Claude Desktop
