@@ -17,7 +17,7 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 
 ## Current Implementation Status
 
-**Overall: 80% Complete** (Phases 1-6 done, Phase 7 pending)
+**Overall: 85% Complete** (Phases 1-6 done, Phase 7 testing implemented)
 
 ### ✅ Completed (Phases 1-6)
 
@@ -52,11 +52,20 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ cap://watchlists - All watchlists with markets
 - ✅ cap://market-cache/{epic} - Market details (dynamic)
 
-### 📋 Pending (Phase 7)
+### ✅ Testing (Phase 7 - Partial)
 
-**Phase 7: Testing & Optional Features**
+**Testing Suite**
+- ✅ Test infrastructure (pytest, pytest-asyncio, pytest-mock, pytest-cov)
+- ✅ Basic sanity tests (imports, error definitions, MCP server instance)
+- ✅ MCP registration tests (33 tools, 5 resources, 4 prompts)
+- ✅ Prompt validation tests (descriptions, arguments)
+- ⏳ Unit tests for core components (deferred - tight coupling)
+- ⏳ Integration tests with mocked API (deferred - tight coupling)
+
+### 📋 Pending
+
+**Optional Features**
 - ⏳ WebSocket support (optional, live streaming)
-- ⏳ Comprehensive testing suite (unit, integration, acceptance)
 - ⏳ 2 missing tools (update position, update order)
 
 ## Quick Start Guide
@@ -820,10 +829,26 @@ All side-effect operations use a strict preview → execute flow:
 
 ## Development
 
-### Run Tests (once implemented)
+### Run Tests
 ```bash
+# Run all tests
 pytest
+
+# Run with coverage report
+pytest --cov=capital_mcp --cov-report=html
+
+# Run specific test file
+pytest tests/test_mcp_registration.py
+
+# Run in verbose mode
+pytest -v
 ```
+
+Current test coverage:
+- 13 tests (all passing)
+- MCP registration validation (tools, resources, prompts)
+- Import and module structure tests
+- Prompt schema validation
 
 ### Code Quality
 ```bash
