@@ -70,14 +70,13 @@ async def test_all_resources_registered():
 
     total = len(resources) + len(templates)
 
-    # Should have 5 resources (4 static + 1 dynamic)
-    assert total == 5
+    # Should have 4 resources (3 static + 1 dynamic)
+    assert total == 4
 
     # Check static resources
     assert "cap://status" in resources
     assert "cap://risk-policy" in resources
     assert "cap://allowed-epics" in resources
-    assert "cap://watchlists" in resources
 
     # Check dynamic resource template
     assert "cap://market-cache/{epic}" in templates

@@ -1711,65 +1711,6 @@ async def cap_allowed_epics_resource() -> dict[str, Any]:
     }
 
 
-@mcp.resource("cap://watchlists")
-async def cap_watchlists_resource() -> dict[str, Any]:
-    """
-    All user watchlists with their markets.
-
-    Provides a comprehensive view of all watchlists and the markets they contain.
-    Requires authentication. Fetches live data from Capital.com API.
-
-    Note: This makes multiple API calls (1 + N for N watchlists). Be mindful of rate limits.
-    """
-    session = get_session_manager()
-    await session.ensure_logged_in()
-
-    client = get_client()
-
-    # Get all watchlists
-    response = await client.get("/watchlists")
-    watchlists = response.json().get("watchlists", [])
-
-    # Fetch markets for each watchlist
-    result = []
-    for wl in watchlists:
-        wl_id = wl.get("id")
-        wl_name = wl.get("name")
-
-        # Get markets in this watchlist
-        markets_response = await client.get(f"/watchlists/{wl_id}")
-        markets = markets_response.json().get("markets", [])
-
-        result.append(
-            {
-                "id": wl_id,
-                "name": wl_name,
-                "default": wl.get("defaultSystemWatchlist", False),
-                "editable": wl.get("editable", True),
-                "deleteable": wl.get("deleteable", True),
-                "market_count": len(markets),
-                "markets": [
-                    {
-                        "epic": m.get("epic"),
-                        "instrument_name": m.get("instrumentName"),
-                        "market_status": m.get("marketStatus"),
-                    }
-                    for m in markets
-                ],
-            }
-        )
-
-    return {
-        "watchlists": result,
-        "total_count": len(result),
-        "timestamp": (
-            session.get_status().last_activity.isoformat()
-            if session.get_status().last_activity
-            else None
-        ),
-    }
-
-
 @mcp.resource("cap://market-cache/{epic}")
 async def cap_market_cache_resource(epic: str) -> dict[str, Any]:
     """

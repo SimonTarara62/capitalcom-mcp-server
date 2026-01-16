@@ -45,11 +45,10 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ execute_trade - Execute previewed trades safely
 - ✅ position_review - Analyze portfolio positions and orders
 
-**MCP Resources (5 read-only resources implemented)**
+**MCP Resources (4 read-only resources implemented)**
 - ✅ cap://status - Server and session status
 - ✅ cap://risk-policy - Risk management configuration
 - ✅ cap://allowed-epics - Trading allowlist
-- ✅ cap://watchlists - All watchlists with markets
 - ✅ cap://market-cache/{epic} - Market details (dynamic)
 
 ### ✅ Testing (Phase 7 - Partial)
@@ -693,51 +692,7 @@ Current trading allowlist configuration showing permitted markets.
 
 ---
 
-#### 4. `cap://watchlists` - All Watchlists
-
-All user watchlists with their markets (live data from broker).
-
-**Returns**: JSON with all watchlists, market details, and metadata
-
-**Authentication**: Required
-
-**Example**:
-```json
-{
-  "watchlists": [
-    {
-      "id": "12345",
-      "name": "My Metals",
-      "default": false,
-      "editable": true,
-      "deleteable": true,
-      "market_count": 2,
-      "markets": [
-        {
-          "epic": "GOLD",
-          "instrument_name": "Spot Gold",
-          "market_status": "TRADEABLE"
-        },
-        {
-          "epic": "SILVER",
-          "instrument_name": "Spot Silver",
-          "market_status": "TRADEABLE"
-        }
-      ]
-    }
-  ],
-  "total_count": 1,
-  "timestamp": "2026-01-16T10:30:00"
-}
-```
-
-**Note**: Makes N+1 API calls (1 for list + 1 per watchlist). Be mindful of rate limits.
-
-**Use Cases**: Browse all watchlists, analyze watchlist composition, export watchlist data
-
----
-
-#### 5. `cap://market-cache/{epic}` - Market Details (Dynamic)
+#### 4. `cap://market-cache/{epic}` - Market Details (Dynamic)
 
 Cached market details for a specific epic (live fetch from broker).
 
@@ -796,13 +751,13 @@ User: "Which markets can I trade?"
 Claude: [Reads cap://allowed-epics resource, lists permitted epics]
 
 User: "Show all my watchlists"
-Claude: [Reads cap://watchlists resource, displays watchlist data]
+Claude: [Calls cap_watchlists_list tool, displays watchlist data]
 
 User: "Get details for GOLD market"
 Claude: [Reads cap://market-cache/GOLD resource, shows market info]
 ```
 
-Resources provide a convenient way to inspect server state and configuration without running tools.
+Resources provide a convenient way to inspect server state and configuration without running tools. For watchlist data, use the `cap_watchlists_list` and `cap_watchlists_get` tools.
 
 ## Safety Model
 
