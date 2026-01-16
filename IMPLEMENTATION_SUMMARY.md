@@ -268,7 +268,7 @@ capital-mcp/
 
 ---
 
-## What's NOT Built (Remaining 30%)
+## What's NOT Built (Remaining 25%)
 
 ### Phase 5: MCP Resources (0% Complete)
 - ⏳ `cap://status` - Server status resource
@@ -277,11 +277,11 @@ capital-mcp/
 - ⏳ `cap://watchlists` - Watchlists resource
 - ⏳ `cap://market-cache/{epic}` - Market cache resource
 
-### Phase 6: MCP Prompts (0% Complete)
-- ⏳ Market scan workflow prompt
-- ⏳ Trade proposal workflow prompt
-- ⏳ Execute trade workflow prompt
-- ⏳ Position review workflow prompt
+### Phase 6: MCP Prompts (100% Complete)
+- ✅ Market scan workflow prompt
+- ✅ Trade proposal workflow prompt
+- ✅ Execute trade workflow prompt
+- ✅ Position review workflow prompt
 
 ### Phase 7: WebSocket Support (0% Complete)
 - ⏳ WebSocket client (wss://api-streaming-capital.backend-capital.com)
@@ -322,10 +322,10 @@ capital-mcp/
 - ✅ **Phase 3**: Risk & Safety (100%)
 - ✅ **Phase 4**: MCP Tools (100% - 36 tools)
 - ⏳ **Phase 5**: MCP Resources (0%)
-- ⏳ **Phase 6**: MCP Prompts (0%)
+- ✅ **Phase 6**: MCP Prompts (100% - 4 workflows)
 - ⏳ **Phase 7**: Testing & WebSocket (0%)
 
-**Overall Completion**: ~70% of full specification
+**Overall Completion**: ~75% of full specification
 
 ### Specification Checklist
 - **Foundation**: 5/5 ✅
@@ -339,7 +339,7 @@ capital-mcp/
 - **MCP Tools - Trading (Execute)**: 4/6 ✅ (missing update position/order)
 - **MCP Tools - Watchlists**: 6/6 ✅
 - **MCP Resources**: 0/5 ⏳
-- **MCP Prompts**: 0/4 ⏳
+- **MCP Prompts**: 4/4 ✅
 - **Optional WebSocket**: 0/7 ⏳
 - **Testing**: 0/4 ⏳
 - **Documentation**: 3/5 ✅
@@ -432,9 +432,8 @@ Restart Claude Desktop. Ask: "What Capital.com tools are available?"
 ### Short-Term (Next Session)
 1. Add missing 2 tools (update position/order)
 2. Implement MCP Resources (5 resources)
-3. Implement MCP Prompts (4 workflows)
-4. Test with real Capital.com Demo account
-5. Fix any discovered bugs
+3. Test with real Capital.com Demo account
+4. Fix any discovered bugs
 
 ### Medium-Term
 1. Unit test suite
@@ -467,8 +466,8 @@ The server can be used **immediately** for:
 - Demo account trading (with safety controls)
 - Integration with Claude Desktop, Cursor, Windsurf
 
-**Remaining work** (30%) is primarily:
-- MCP Resources & Prompts (quality-of-life features)
+**Remaining work** (25%) is primarily:
+- MCP Resources (quality-of-life features)
 - WebSocket support (optional real-time data)
 - Testing suite (quality assurance)
 - 2 missing tools (update operations)

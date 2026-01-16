@@ -459,6 +459,114 @@ MCP Server (capital_mcp/)
 - `cap.watchlists.delete` - Delete watchlist
 - `cap.watchlists.remove_market` - Remove market
 
+## MCP Prompts (Workflow Templates)
+
+MCP prompts are structured workflows that guide Claude through complex multi-step trading operations. They provide step-by-step instructions and best practices for common tasks.
+
+### Available Prompts (4)
+
+#### 1. `market_scan` - Market Analysis Workflow
+Guides you through scanning a watchlist for trading opportunities.
+
+**Parameters:**
+- `watchlist_id` - Watchlist to scan (leave empty to list watchlists first)
+- `timeframe` - Price resolution: MINUTE, MINUTE_5, HOUR, DAY (default: HOUR)
+- `lookback_periods` - Number of candles to fetch: 1-1000 (default: 24)
+
+**Workflow:**
+1. Get watchlist markets
+2. Fetch price data for each market
+3. Technical analysis (trends, support/resistance, patterns)
+4. Optional sentiment check
+5. Generate opportunity summary
+
+**Example Usage:**
+- "Use the market_scan prompt to analyze my watchlist"
+- "Scan my markets for trading setups"
+
+#### 2. `trade_proposal` - Trade Planning Workflow
+Guides you through creating a trade proposal with proper risk management.
+
+**Parameters:**
+- `epic` - Market to trade (required, e.g., SILVER, GOLD)
+- `direction` - BUY or SELL (default: BUY)
+- `thesis` - Your trading reasoning (optional)
+- `risk_percent` - Risk as % of balance (default: 1.0%)
+
+**Workflow:**
+1. Fetch market details and dealing rules
+2. Calculate position size based on risk %
+3. Define stop loss and take profit levels
+4. Preview the trade (validation only - no execution)
+5. Return preview_id for potential execution
+
+**Example Usage:**
+- "Create a trade proposal for SILVER"
+- "Propose a long trade on GOLD with 2% risk"
+
+**Safety:** This prompt does NOT execute trades - it only creates previews.
+
+#### 3. `execute_trade` - Trade Execution Workflow
+Guides you through executing a previewed trade safely.
+
+**Parameters:**
+- `preview_id` - Preview ID from trade_proposal (required)
+
+**Workflow:**
+1. Verify preview_id is provided and valid
+2. Re-check all risk controls
+3. Execute position with broker
+4. Poll for confirmation (ACCEPTED/REJECTED)
+5. Report final status
+
+**Example Usage:**
+- "Execute the trade I just previewed"
+- "Place the trade with preview ID abc-123"
+
+**Safety:**
+- Requires CAP_ALLOW_TRADING=true
+- Requires epic in allowlist
+- Preview must not be expired (2-minute TTL)
+- ⚠️ **This WILL place a real trade**
+
+#### 4. `position_review` - Portfolio Analysis Workflow
+Guides you through analyzing your open positions and orders.
+
+**Parameters:** None (analyzes all current positions)
+
+**Workflow:**
+1. Fetch all open positions
+2. Fetch all working orders
+3. Calculate P&L, risk, and exposure metrics
+4. Identify concentration and correlation risks
+5. Suggest potential adjustments (without executing)
+
+**Example Usage:**
+- "Review my current positions"
+- "Analyze my portfolio exposure"
+
+**Safety:** This is a read-only workflow - no trades are executed.
+
+### How to Use Prompts
+
+In Claude Desktop or other MCP clients, prompts appear as available interaction patterns. You can invoke them naturally in conversation:
+
+```
+User: "I want to scan my watchlist for opportunities"
+Claude: [Invokes market_scan prompt, guides through the workflow]
+
+User: "Create a trade plan for SILVER"
+Claude: [Invokes trade_proposal prompt, designs trade with risk management]
+
+User: "Execute that trade"
+Claude: [Invokes execute_trade prompt, submits to broker]
+
+User: "Show me my open positions"
+Claude: [Invokes position_review prompt, analyzes portfolio]
+```
+
+Prompts provide structured guidance while maintaining safety controls throughout the workflow.
+
 ## Safety Model
 
 ### Two-Phase Execution
