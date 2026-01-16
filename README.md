@@ -17,7 +17,9 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 
 ## Current Implementation Status
 
-### ✅ Completed (Phases 1-4)
+**Overall: 75% Complete** (Phases 1-6 done, Phase 7 pending)
+
+### ✅ Completed (Phases 1-6)
 
 **Foundation & Infrastructure**
 - ✅ Project structure with pyproject.toml, dependencies configured
@@ -37,13 +39,25 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ Trading tools (14) - positions, orders, preview, execute, close, cancel
 - ✅ Watchlist tools (6) - list, get, create, add, delete, remove
 
-### 📋 Pending (Phase 5-7)
+**MCP Prompts (4 workflow templates implemented)**
+- ✅ market_scan - Scan watchlists for trading opportunities
+- ✅ trade_proposal - Design trades with risk management
+- ✅ execute_trade - Execute previewed trades safely
+- ✅ position_review - Analyze portfolio positions and orders
 
-- MCP Resources (cap://status, cap://risk-policy, etc.)
-- MCP Prompts (workflow templates for safe trading)
-- WebSocket support (optional, live streaming)
-- Comprehensive testing suite (unit, integration, acceptance)
-- Enhanced documentation & examples
+### 📋 Pending (Phase 5, 7)
+
+**Phase 5: MCP Resources**
+- ⏳ cap://status - Server status resource
+- ⏳ cap://risk-policy - Risk policy resource
+- ⏳ cap://allowed-epics - Allowlist resource
+- ⏳ cap://watchlists - Watchlists resource
+- ⏳ cap://market-cache/{epic} - Market cache resource
+
+**Phase 7: Testing & Optional Features**
+- ⏳ WebSocket support (optional, live streaming)
+- ⏳ Comprehensive testing suite (unit, integration, acceptance)
+- ⏳ 2 missing tools (update position, update order)
 
 ## Quick Start Guide
 
@@ -407,7 +421,7 @@ MCP Server (capital_mcp/)
 - `CAP_HTTP_TIMEOUT_S` - HTTP timeout (default: 15)
 - `CAP_LOG_LEVEL` - Log level: DEBUG, INFO, WARNING, ERROR (default: INFO)
 
-## MCP Tools (Planned - 50+ tools)
+## MCP Tools (36 implemented)
 
 ### Session (4)
 - `cap.session.status` - Get session info
