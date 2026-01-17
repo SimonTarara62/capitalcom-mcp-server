@@ -64,19 +64,8 @@ Thumbs.db
 *.session
 
 # Working/temporary files (not for public repo)
-QUICKFIX.md
-MIGRATION_COMPLETE.md
-UPDATE_SPEC.sh
-test_fastmcp.py
-GITHUB_PREP.md
+archive/
 *.backup
 
-# Documentation (external reference)
+# External documentation (reference only, large Postman collection)
 doc/
-README_GITHUB.md
-verify_git.sh
-PUBLISH_INSTRUCTIONS.md
-READY_TO_PUSH.txt
-BUG_FIX_SUMMARY.md
-PHASE5_PLAN.md
-PHASE7_TESTING_PLAN.md

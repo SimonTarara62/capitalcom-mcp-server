@@ -240,7 +240,7 @@ Any MCP client supporting STDIO transport can use this server:
 | `cap_trade_preview_position` | Preview position (NO SIDE EFFECTS) | Yes |
 | `cap_trade_preview_working_order` | Preview working order (NO SIDE EFFECTS) | Yes |
 
-### Trading - Execute (4 tools, DANGEROUS)
+### Trading - Execute (7 tools, DANGEROUS)
 
 | Tool | Description | Auth Required | Trading Gated |
 |------|-------------|---------------|---------------|
@@ -248,6 +248,14 @@ Any MCP client supporting STDIO transport can use this server:
 | `cap_trade_execute_working_order` | Execute order (CREATES ORDER) | Yes | Yes |
 | `cap_trade_positions_close` | Close position (CLOSES TRADE) | Yes | Yes |
 | `cap_trade_orders_cancel` | Cancel order (CANCELS ORDER) | Yes | Yes |
+
+### WebSocket Streaming (3 tools)
+
+| Tool | Description | Auth Required | WS Enabled |
+|------|-------------|---------------|------------|
+| `cap_stream_prices` | Stream real-time price updates (max 40 EPICs) | Yes | Yes |
+| `cap_stream_alerts` | Monitor markets for alert conditions | Yes | Yes |
+| `cap_stream_portfolio` | Stream real-time P&L for open positions | Yes | Yes |
 
 ### Watchlists (6 tools)
 
