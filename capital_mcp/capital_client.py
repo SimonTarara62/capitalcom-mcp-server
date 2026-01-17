@@ -153,13 +153,37 @@ class CapitalClient:
                 # Handle other errors
                 if response.status_code >= 400:
                     error_body = None
+                    error_message = response.reason_phrase or "Error"
+
                     try:
                         error_body = response.text
+                        # Try to extract error from JSON response
+                        if error_body:
+                            try:
+                                error_json = response.json()
+                                # Capital.com returns {"errorCode": "message"}
+                                if isinstance(error_json, dict) and "errorCode" in error_json:
+                                    error_message = error_json["errorCode"]
+                                # Or it might be {"error": "...", "message": "..."}
+                                elif isinstance(error_json, dict):
+                                    if "message" in error_json:
+                                        error_message = error_json["message"]
+                                    elif "error" in error_json:
+                                        error_message = error_json["error"]
+                                    else:
+                                        # Use full JSON as string
+                                        error_message = str(error_json)
+                            except Exception:
+                                # If JSON parsing fails, use raw text (truncate long responses)
+                                if len(error_body) > 200:
+                                    error_message = error_body[:200] + "..."
+                                else:
+                                    error_message = error_body
                     except Exception:
                         pass
 
                     raise UpstreamError(
-                        f"HTTP {response.status_code}: {response.reason_phrase}",
+                        f"HTTP {response.status_code}: {error_message}",
                         status_code=response.status_code,
                         response_body=error_body,
                     )

@@ -81,7 +81,7 @@ class WebSocketClient:
             # Connect with authentication headers
             self._ws = await websockets.connect(
                 ws_url,
-                extra_headers={
+                additional_headers={
                     "CST": tokens.cst,
                     "X-SECURITY-TOKEN": tokens.x_security_token,
                 },

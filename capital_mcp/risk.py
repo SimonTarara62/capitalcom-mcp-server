@@ -240,8 +240,8 @@ class RiskEngine:
             )
         )
 
-        # Build normalized request
-        normalized_request = request.model_dump()
+        # Build normalized request (mode='json' to serialize enums as strings)
+        normalized_request = request.model_dump(mode='json')
         normalized_request["size"] = normalized_size
         normalized_request["size_warnings"] = size_warnings
 

@@ -63,6 +63,7 @@ async def cap_session_login(force: bool = False, account_id: str | None = None) 
     """
     session = get_session_manager()
     data = await session.login(force=force, account_id=account_id)
+    data["active_account_id"] = session.account_id
     return data
 
 
@@ -264,7 +265,9 @@ async def cap_account_list() -> dict[str, Any]:
 
     client = get_client()
     response = await client.get("/accounts")
-    return response.json()
+    data = response.json()
+    data["active_account_id"] = session.account_id
+    return data
 
 
 @mcp.tool()
@@ -800,6 +803,7 @@ async def cap_trade_execute_position(
         except TimeoutError:
             data["confirmation"] = {"status": "TIMEOUT", "message": "Confirmation timed out"}
 
+    data["active_account_id"] = session.account_id
     return data
 
 
@@ -882,6 +886,7 @@ async def cap_trade_execute_working_order(
         except TimeoutError:
             data["confirmation"] = {"status": "TIMEOUT", "message": "Confirmation timed out"}
 
+    data["active_account_id"] = session.account_id
     return data
 
 
@@ -927,6 +932,7 @@ async def cap_trade_positions_close(
         except TimeoutError:
             data["confirmation"] = {"status": "TIMEOUT", "message": "Confirmation timed out"}
 
+    data["active_account_id"] = session.account_id
     return data
 
 
@@ -972,6 +978,7 @@ async def cap_trade_orders_cancel(
         except TimeoutError:
             data["confirmation"] = {"status": "TIMEOUT", "message": "Confirmation timed out"}
 
+    data["active_account_id"] = session.account_id
     return data
 
 
