@@ -54,8 +54,13 @@ async def test_all_tools_registered():
     assert "cap_watchlists_add_market" in tool_names
     assert "cap_watchlists_remove_market" in tool_names
 
-    # Total should be 33+ tools
-    assert len(tool_names) >= 33
+    # WebSocket streaming tools
+    assert "cap_stream_prices" in tool_names
+    assert "cap_stream_alerts" in tool_names
+    assert "cap_stream_portfolio" in tool_names
+
+    # Total should be 36+ tools
+    assert len(tool_names) >= 36
 
 
 @pytest.mark.asyncio
@@ -90,13 +95,19 @@ async def test_all_prompts_registered():
     prompts = await mcp.get_prompts()
     prompt_names = list(prompts.keys())
 
-    # Should have 4 prompts
-    assert len(prompt_names) == 4
+    # Should have 7 prompts
+    assert len(prompt_names) == 7
 
+    # Original prompts
     assert "market_scan" in prompt_names
     assert "trade_proposal" in prompt_names
     assert "execute_trade" in prompt_names
     assert "position_review" in prompt_names
+
+    # WebSocket streaming prompts
+    assert "live_price_monitor" in prompt_names
+    assert "real_time_alerts" in prompt_names
+    assert "live_portfolio_monitor" in prompt_names
 
 
 @pytest.mark.asyncio

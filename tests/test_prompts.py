@@ -10,15 +10,20 @@ async def test_prompts_registered():
 
     prompts = await mcp.get_prompts()
 
-    # Should have 4 prompts
-    assert len(prompts) == 4
+    # Should have 7 prompts (4 original + 3 WebSocket streaming)
+    assert len(prompts) == 7
 
     # Check prompt names
     prompt_names = list(prompts.keys())
+    # Original prompts
     assert "market_scan" in prompt_names
     assert "trade_proposal" in prompt_names
     assert "execute_trade" in prompt_names
     assert "position_review" in prompt_names
+    # WebSocket streaming prompts
+    assert "live_price_monitor" in prompt_names
+    assert "real_time_alerts" in prompt_names
+    assert "live_portfolio_monitor" in prompt_names
 
 
 @pytest.mark.asyncio

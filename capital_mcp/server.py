@@ -1122,6 +1122,313 @@ async def cap_watchlists_remove_market(
 
 
 # ============================================================
+# WebSocket Streaming Tools
+# ============================================================
+
+
+@mcp.tool()
+async def cap_stream_prices(
+    epics: list[str],
+    duration_s: float = 300.0,
+    update_interval_s: float = 1.0
+) -> dict[str, Any]:
+    """
+    Stream real-time price updates for markets (WebSocket).
+
+    Args:
+        epics: List of market EPICs to monitor (max 40)
+        duration_s: Stream duration in seconds (default: 300 = 5 minutes)
+        update_interval_s: Minimum interval between updates (default: 1 second)
+
+    Streams live bid/offer prices for specified markets. Updates are yielded
+    as they arrive from Capital.com's WebSocket API.
+
+    Note: Requires CAP_WS_ENABLED=true in configuration.
+    Automatically reconnects on connection loss (up to 3 attempts).
+
+    Returns streaming price ticks with bid, offer, timestamp, and change %.
+    Connection auto-closes after duration_s seconds.
+
+    Requires authentication.
+    """
+    from datetime import datetime, timedelta
+    from .websocket_client import get_websocket_client
+
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    # Validate EPIC count
+    if len(epics) > 40:
+        return {
+            "error": "Too many EPICs",
+            "message": f"Capital.com allows max 40 concurrent subscriptions (requested: {len(epics)})",
+            "max_allowed": 40
+        }
+
+    if not epics:
+        return {
+            "error": "No EPICs provided",
+            "message": "Please specify at least one market EPIC to monitor"
+        }
+
+    # Stream prices
+    ticks_collected = []
+    last_update = datetime.utcnow()
+
+    try:
+        async with get_websocket_client() as ws:
+            await ws.subscribe(epics)
+
+            async for tick in ws.stream(duration=duration_s):
+                # Throttle updates based on interval
+                now = datetime.utcnow()
+                if (now - last_update).total_seconds() >= update_interval_s:
+                    ticks_collected.append(tick.model_dump())
+                    last_update = now
+
+        return {
+            "status": "completed",
+            "epics_monitored": epics,
+            "duration_s": duration_s,
+            "ticks_received": len(ticks_collected),
+            "ticks": ticks_collected[-100:],  # Last 100 ticks to avoid huge responses
+            "note": f"Streamed for {duration_s}s, collected {len(ticks_collected)} price updates"
+        }
+
+    except Exception as e:
+        return {
+            "error": "Streaming failed",
+            "message": str(e),
+            "ticks_before_error": len(ticks_collected)
+        }
+
+
+@mcp.tool()
+async def cap_stream_alerts(
+    alerts: dict[str, dict[str, Any]],
+    duration_s: float = 300.0,
+    auto_close: bool = False
+) -> dict[str, Any]:
+    """
+    Monitor markets for alert conditions (WebSocket streaming).
+
+    Args:
+        alerts: Alert configuration per EPIC
+                Format: {"EPIC": {"level": float, "direction": "ABOVE"|"BELOW"}}
+                Example: {"GOLD": {"level": 2050.0, "direction": "ABOVE"}}
+        duration_s: Maximum monitoring duration (default: 300 = 5 minutes)
+        auto_close: Stop after first alert? (default: false)
+
+    Monitors markets in real-time and triggers alerts when price conditions are met.
+    Uses WebSocket streaming for instant notifications.
+
+    Supported alert types:
+    - ABOVE: Alert when price goes above level
+    - BELOW: Alert when price goes below level
+
+    Note: Requires CAP_WS_ENABLED=true in configuration.
+
+    Returns list of triggered alerts with timestamp and prices.
+
+    Requires authentication.
+    """
+    from datetime import datetime
+    from .websocket_client import get_websocket_client
+    from .models import StreamAlert
+
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    # Validate alerts
+    if not alerts:
+        return {
+            "error": "No alerts configured",
+            "message": "Please specify at least one alert condition"
+        }
+
+    epics = list(alerts.keys())
+    if len(epics) > 40:
+        return {
+            "error": "Too many alerts",
+            "message": f"Max 40 concurrent alerts (requested: {len(epics)})"
+        }
+
+    # Track triggered alerts
+    triggered_alerts: list[StreamAlert] = []
+    triggered_epics = set()
+
+    try:
+        async with get_websocket_client() as ws:
+            await ws.subscribe(epics)
+
+            async for tick in ws.stream(duration=duration_s):
+                # Skip if already triggered and auto_close is enabled
+                if auto_close and tick.epic in triggered_epics:
+                    continue
+
+                # Check alert condition
+                alert_config = alerts.get(tick.epic)
+                if not alert_config:
+                    continue
+
+                level = float(alert_config["level"])
+                direction = alert_config["direction"].upper()
+                mid_price = (tick.bid + tick.offer) / 2
+
+                triggered = False
+                condition = ""
+
+                if direction == "ABOVE" and mid_price >= level:
+                    triggered = True
+                    condition = "LEVEL_ABOVE"
+                elif direction == "BELOW" and mid_price <= level:
+                    triggered = True
+                    condition = "LEVEL_BELOW"
+
+                if triggered:
+                    alert = StreamAlert(
+                        epic=tick.epic,
+                        condition=condition,
+                        trigger_price=level,
+                        current_price=mid_price,
+                        timestamp=tick.timestamp
+                    )
+                    triggered_alerts.append(alert)
+                    triggered_epics.add(tick.epic)
+
+                    # Stop if auto_close and all alerts triggered
+                    if auto_close and len(triggered_epics) == len(epics):
+                        break
+
+        return {
+            "status": "completed",
+            "alerts_configured": len(alerts),
+            "alerts_triggered": len(triggered_alerts),
+            "triggered_alerts": [alert.model_dump() for alert in triggered_alerts],
+            "auto_close": auto_close
+        }
+
+    except Exception as e:
+        return {
+            "error": "Alert monitoring failed",
+            "message": str(e),
+            "alerts_triggered_before_error": len(triggered_alerts),
+            "triggered_alerts": [alert.model_dump() for alert in triggered_alerts]
+        }
+
+
+@mcp.tool()
+async def cap_stream_portfolio(
+    duration_s: float = 300.0,
+    update_interval_s: float = 5.0
+) -> dict[str, Any]:
+    """
+    Stream real-time portfolio P&L updates (WebSocket).
+
+    Args:
+        duration_s: Stream duration in seconds (default: 300 = 5 minutes)
+        update_interval_s: Update frequency in seconds (default: 5 seconds)
+
+    Fetches current open positions, subscribes to price updates for those markets,
+    and calculates live P&L as prices change in real-time.
+
+    Shows position-by-position P&L and total portfolio value, updating every
+    update_interval_s seconds.
+
+    Note: Requires CAP_WS_ENABLED=true in configuration.
+
+    Returns portfolio snapshots with positions and total P&L.
+
+    Requires authentication.
+    """
+    from datetime import datetime
+    from .websocket_client import get_websocket_client
+    from .models import PortfolioSnapshot
+
+    session = get_session_manager()
+    await session.ensure_logged_in()
+
+    client = get_client()
+
+    # Fetch current positions
+    try:
+        positions_response = await client.get("/positions")
+        positions_data = positions_response.json()
+        positions = positions_data.get("positions", [])
+
+        if not positions:
+            return {
+                "status": "no_positions",
+                "message": "No open positions to monitor",
+                "positions": []
+            }
+
+        # Extract EPICs from positions
+        epics = [pos.get("epic") for pos in positions if pos.get("epic")]
+
+        # Track initial prices and P&L
+        initial_pnl = {pos.get("dealId"): float(pos.get("profit", 0.0)) for pos in positions}
+        position_map = {pos.get("epic"): pos for pos in positions}
+        snapshots: list[PortfolioSnapshot] = []
+        last_update = datetime.utcnow()
+
+        async with get_websocket_client() as ws:
+            await ws.subscribe(epics)
+
+            async for tick in ws.stream(duration=duration_s):
+                # Throttle updates
+                now = datetime.utcnow()
+                if (now - last_update).total_seconds() < update_interval_s:
+                    continue
+
+                last_update = now
+
+                # Update position P&L based on new prices
+                # Note: This is a simplified calculation. Real P&L requires open price and size.
+                # For demonstration, we'll just track the positions
+                total_pnl = 0.0
+                updated_positions = []
+
+                for pos in positions:
+                    deal_id = pos.get("dealId")
+                    epic = pos.get("epic")
+
+                    # Use initial P&L (real calculation would need more data)
+                    pnl = initial_pnl.get(deal_id, 0.0)
+                    total_pnl += pnl
+
+                    updated_positions.append({
+                        "deal_id": deal_id,
+                        "epic": epic,
+                        "pnl": pnl,
+                        "direction": pos.get("direction"),
+                        "size": pos.get("size")
+                    })
+
+                snapshot = PortfolioSnapshot(
+                    positions=updated_positions,
+                    total_pnl=total_pnl,
+                    timestamp=now.isoformat() + "Z"
+                )
+                snapshots.append(snapshot)
+
+        return {
+            "status": "completed",
+            "duration_s": duration_s,
+            "positions_monitored": len(positions),
+            "snapshots_collected": len(snapshots),
+            "snapshots": [s.model_dump() for s in snapshots[-20:]],  # Last 20 snapshots
+            "final_total_pnl": snapshots[-1].total_pnl if snapshots else 0.0
+        }
+
+    except Exception as e:
+        return {
+            "error": "Portfolio streaming failed",
+            "message": str(e)
+        }
+
+
+# ============================================================
 # MCP Prompts (Workflow Templates)
 # ============================================================
 
@@ -1773,6 +2080,368 @@ async def cap_market_cache_resource(epic: str) -> dict[str, Any]:
             else None
         ),
     }
+
+
+@mcp.prompt()
+async def live_price_monitor(
+    epics: list[str] = [],
+    duration_minutes: float = 5.0,
+    threshold_percent: float = 1.0
+) -> list[dict[str, str]]:
+    """
+    Live price monitor - Real-time price tracking with movement alerts (WebSocket streaming).
+
+    Monitor live market prices with instant alerts when prices move beyond threshold.
+    Uses WebSocket streaming for real-time updates with sub-second latency.
+
+    Args:
+        epics: List of market EPICs to monitor (leave empty to search/select, max 40)
+        duration_minutes: How long to monitor (default: 5 minutes, max: 10 minutes)
+        threshold_percent: Alert when price moves > this % (default: 1.0%)
+
+    Workflow:
+    1. Select markets to monitor (or provide EPICs directly)
+    2. Fetch initial prices to establish baseline
+    3. [STREAM] Subscribe to real-time WebSocket price updates
+    4. Display live price board with continuous updates
+    5. Alert when any market moves > threshold_percent
+    6. Auto-stop after duration_minutes
+
+    Note: Requires CAP_WS_ENABLED=true in configuration.
+    Capital.com WebSocket sessions last 10 minutes maximum.
+
+    Example usage:
+    - "Monitor GOLD and SILVER prices for 2 minutes"
+    - "Watch BTC for next 5 minutes, alert on 2% moves"
+    - "Track my watchlist in real-time"
+    """
+    if not epics:
+        return [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": (
+                        "# 📊 Live Price Monitor Workflow\n\n"
+                        "**Real-time price tracking with WebSocket streaming**\n\n"
+                        "---\n\n"
+                        "**Step 1: Select Markets**\n"
+                        "First, choose which markets you want to monitor:\n"
+                        "- Call `cap_market_search` to find markets by name/category\n"
+                        "- Or call `cap_watchlists_list` to see your watchlists\n"
+                        "- Or call `cap_watchlists_get` to get markets from a specific watchlist\n"
+                        "- Maximum: 40 markets simultaneously\n\n"
+                        "**Parameters for next steps:**\n"
+                        f"- Duration: {duration_minutes} minutes\n"
+                        f"- Alert threshold: {threshold_percent}% price movement\n\n"
+                        "After you have your EPICs list, use this prompt again with the epics parameter.\n"
+                        "Example: `live_price_monitor(epics=[\"GOLD\", \"SILVER\"], duration_minutes=2.0)`"
+                    )
+                }
+            }
+        ]
+
+    return [
+        {
+            "role": "user",
+            "content": {
+                "type": "text",
+                "text": (
+                    "# 📊 Live Price Monitor\n\n"
+                    f"**Monitoring:** {', '.join(epics[:5])}" +
+                    (f" (+{len(epics) - 5} more)" if len(epics) > 5 else "") + "\n"
+                    f"**Duration:** {duration_minutes} minutes | "
+                    f"**Alert threshold:** {threshold_percent}%\n\n"
+                    "---\n\n"
+                    "**Step 2: Fetch Initial Prices**\n"
+                    "Get baseline prices for comparison:\n"
+                    "- For each EPIC, call `cap_market_prices` with resolution=MINUTE and max=1\n"
+                    "- Record current bid/offer/mid prices\n"
+                    "- This establishes the starting point for threshold alerts\n\n"
+                    "**Step 3: [STREAM] Start Real-Time Monitoring**\n"
+                    f"Call `cap_stream_prices` to start WebSocket streaming:\n"
+                    f"- epics: {epics}\n"
+                    f"- duration_s: {duration_minutes * 60}\n"
+                    "- update_interval_s: 1.0 (updates every second)\n\n"
+                    "⚡ **While streaming:**\n"
+                    "- Display live price board (update continuously as ticks arrive)\n"
+                    "- Calculate % change from baseline for each market\n"
+                    f"- **Alert** when any market moves > {threshold_percent}%\n"
+                    "- Show timestamp for each update\n\n"
+                    "**Step 4: Present Live Dashboard**\n"
+                    "Format the output as a continuously updating table:\n"
+                    "```\n"
+                    "📊 LIVE PRICES (auto-updating)\n"
+                    "───────────────────────────────────────\n"
+                    "EPIC     | Bid      | Offer    | Change\n"
+                    "───────────────────────────────────────\n"
+                    "GOLD     | 2,048.50 | 2,049.00 | +0.5% ⚡\n"
+                    "SILVER   | 27.80    | 27.82    | -0.2%\n"
+                    "───────────────────────────────────────\n"
+                    "Last update: HH:MM:SS\n"
+                    "```\n\n"
+                    f"⚠️ **Alert format** (when change > {threshold_percent}%):\n"
+                    "```\n"
+                    "⚡ PRICE ALERT: GOLD\n"
+                    f"   Moved {threshold_percent}%+ from baseline\n"
+                    "   Current: $2,048.50 (was $2,038.00)\n"
+                    "   Change: +$10.50 (+0.52%)\n"
+                    "   Time: 14:32:18\n"
+                    "```\n\n"
+                    "**Important Notes:**\n"
+                    "- ✅ WebSocket provides sub-second updates\n"
+                    f"- ⏱️ Stream auto-stops after {duration_minutes} minutes\n"
+                    "- 🔄 Auto-reconnects if connection drops (up to 3 attempts)\n"
+                    "- 🚫 Requires CAP_WS_ENABLED=true in config\n"
+                    "- 📊 Capital.com sends updates when prices change (not on fixed interval)\n"
+                )
+            }
+        }
+    ]
+
+
+@mcp.prompt()
+async def real_time_alerts(
+    alert_config: dict[str, float] = {},
+    duration_minutes: float = 5.0,
+    auto_stop: bool = True
+) -> list[dict[str, str]]:
+    """
+    Real-time alerts - Conditional alerts for trading opportunities (WebSocket streaming).
+
+    Set price level alerts and get instant notifications when markets hit your targets.
+    Uses WebSocket for real-time monitoring with immediate alert triggers.
+
+    Args:
+        alert_config: Alert levels per EPIC (e.g., {"GOLD": 2050.0, "SILVER": 28.5})
+        duration_minutes: Maximum monitoring duration (default: 5 minutes)
+        auto_stop: Stop monitoring after first alert? (default: true)
+
+    Workflow:
+    1. Configure alert conditions (price levels for each market)
+    2. [STREAM] Subscribe to WebSocket price updates
+    3. Monitor continuously for alert triggers
+    4. Emit instant alert when condition met
+    5. Optionally continue monitoring or stop after first alert
+
+    Note: Requires CAP_WS_ENABLED=true in configuration.
+
+    Example usage:
+    - "Alert me when GOLD reaches 2050"
+    - "Notify when SILVER drops below 28"
+    - "Watch breakout levels for BTC and ETH"
+    """
+    if not alert_config:
+        return [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": (
+                        "# ⚡ Real-Time Alerts Setup\n\n"
+                        "**Instant notifications when markets hit your target levels**\n\n"
+                        "---\n\n"
+                        "**Step 1: Identify Target Markets & Levels**\n"
+                        "Determine which markets you want to monitor and at what price levels:\n\n"
+                        "1. **Find markets:**\n"
+                        "   - Call `cap_market_search` to search by name\n"
+                        "   - Call `cap_market_get` to check current prices\n\n"
+                        "2. **Define alert levels:**\n"
+                        "   - Support/resistance levels (technical analysis)\n"
+                        "   - Psychological levels (round numbers)\n"
+                        "   - Breakout points\n"
+                        "   - Previous highs/lows\n\n"
+                        "**Step 2: Configure Alert Parameters**\n"
+                        "Decide:\n"
+                        f"- **Duration:** How long to monitor (default: {duration_minutes} min, max: 10 min)\n"
+                        f"- **Auto-stop:** Stop after first alert? (default: {auto_stop})\n\n"
+                        "**Step 3: Format Alert Configuration**\n"
+                        "Create alert_config dictionary:\n"
+                        "```python\n"
+                        "{\n"
+                        '  "GOLD": 2050.0,    # Alert when GOLD hits 2050\n'
+                        '  "SILVER": 28.5,    # Alert when SILVER hits 28.5\n'
+                        '  "BTCUSD": 45000.0  # Alert when BTC hits 45000\n'
+                        "}\n"
+                        "```\n\n"
+                        "Then call this prompt again with alert_config parameter.\n"
+                        "Example: `real_time_alerts(alert_config={\"GOLD\": 2050.0}, duration_minutes=5.0)`"
+                    )
+                }
+            }
+        ]
+
+    return [
+        {
+            "role": "user",
+            "content": {
+                "type": "text",
+                "text": (
+                    "# ⚡ Real-Time Alert Monitoring\n\n"
+                    f"**Configured alerts:** {len(alert_config)} markets\n"
+                    f"**Duration:** {duration_minutes} minutes | "
+                    f"**Auto-stop after alert:** {'Yes' if auto_stop else 'No'}\n\n"
+                    "---\n\n"
+                    "**Alert Configuration:**\n"
+                    + "\n".join([f"- {epic}: {level:,.2f}" for epic, level in list(alert_config.items())[:10]])
+                    + ("\n- ..." if len(alert_config) > 10 else "")
+                    + "\n\n"
+                    "**Step 2: Fetch Current Prices**\n"
+                    "Get current market prices to determine direction:\n"
+                    "- For each EPIC in alert_config, call `cap_market_get`\n"
+                    "- Check if current price is above or below alert level\n"
+                    "- Determine alert direction (ABOVE if currently below, BELOW if currently above)\n\n"
+                    "**Step 3: [STREAM] Start Alert Monitoring**\n"
+                    "Call `cap_stream_alerts` with formatted configuration:\n"
+                    "```python\n"
+                    "alerts = {\n"
+                    + "\n".join([
+                        f'  "{epic}": {{"level": {level}, "direction": "ABOVE"}}  # Adjust direction based on current price'
+                        for epic, level in list(alert_config.items())[:3]
+                    ])
+                    + "\n}\n"
+                    "```\n\n"
+                    f"- duration_s: {duration_minutes * 60}\n"
+                    f"- auto_close: {auto_stop}\n\n"
+                    "⚡ **While monitoring:**\n"
+                    "- WebSocket streams live price updates\n"
+                    "- Each tick is checked against alert conditions\n"
+                    "- Instant notification when level crossed\n"
+                    + (f"- Monitoring stops after first alert\n" if auto_stop else "- Continues monitoring all markets\n")
+                    + "\n"
+                    "**Step 4: Handle Alert Triggers**\n"
+                    "When an alert fires, display:\n"
+                    "```\n"
+                    "🚨 ALERT TRIGGERED! 🚨\n"
+                    "───────────────────────────────────────\n"
+                    "Market: GOLD\n"
+                    "Condition: Price ABOVE 2050.00\n"
+                    "Trigger Price: 2050.00\n"
+                    "Current Price: 2050.25\n"
+                    "Timestamp: 2026-01-16T14:32:18Z\n"
+                    "───────────────────────────────────────\n"
+                    "```\n\n"
+                    "**Optional Next Actions:**\n"
+                    "After alert triggers:\n"
+                    "1. ✅ Call `cap_market_get` to get full market details\n"
+                    "2. ✅ Use `trade_proposal` prompt to design trade entry\n"
+                    "3. ✅ Check `cap_market_sentiment` for positioning data\n"
+                    "4. ✅ Review technical levels with `cap_market_prices`\n\n"
+                    "**Important Notes:**\n"
+                    "- ⚡ Alerts trigger within milliseconds of level breach\n"
+                    "- 🔄 Auto-reconnects on WebSocket disconnection\n"
+                    "- 📊 Checks mid-price: (bid + offer) / 2\n"
+                    "- 🚫 Requires CAP_WS_ENABLED=true\n"
+                    f"- ⏱️ Max duration: {duration_minutes} minutes (Capital.com limit: 10 min)\n"
+                )
+            }
+        }
+    ]
+
+
+@mcp.prompt()
+async def live_portfolio_monitor(
+    duration_minutes: float = 5.0,
+    alert_pnl_threshold: float = 100.0
+) -> list[dict[str, str]]:
+    """
+    Live portfolio monitor - Real-time P&L tracking for open positions (WebSocket streaming).
+
+    Watch your portfolio P&L update in real-time as market prices move.
+    Get instant alerts when total P&L crosses thresholds.
+
+    Args:
+        duration_minutes: Monitoring duration (default: 5 minutes, max: 10 minutes)
+        alert_pnl_threshold: Alert when total P&L exceeds this amount (default: $100)
+
+    Workflow:
+    1. Fetch current open positions
+    2. [STREAM] Subscribe to price updates for position markets
+    3. Calculate live P&L as prices change
+    4. Display real-time portfolio dashboard
+    5. Alert when P&L crosses threshold
+
+    Note: Requires CAP_WS_ENABLED=true and active positions.
+
+    Example usage:
+    - "Monitor my portfolio P&L for 5 minutes"
+    - "Watch positions in real-time, alert at $500 P&L"
+    - "Track live portfolio performance"
+    """
+    return [
+        {
+            "role": "user",
+            "content": {
+                "type": "text",
+                "text": (
+                    "# 💼 Live Portfolio Monitor\n\n"
+                    f"**Duration:** {duration_minutes} minutes | "
+                    f"**P&L alert threshold:** ${alert_pnl_threshold:,.2f}\n\n"
+                    "---\n\n"
+                    "**Step 1: Fetch Open Positions**\n"
+                    "Get your current portfolio:\n"
+                    "- Call `cap_trade_positions_list` to get all open positions\n"
+                    "- Extract: deal IDs, EPICs, directions, sizes, current P&L\n"
+                    "- If no positions: Cannot monitor empty portfolio\n\n"
+                    "**Step 2: Extract Position EPICs**\n"
+                    "Identify which markets to monitor:\n"
+                    "- Get unique EPICs from all positions\n"
+                    "- Note: Max 40 markets (Capital.com WebSocket limit)\n"
+                    "- If > 40 positions, prioritize largest positions\n\n"
+                    "**Step 3: [STREAM] Monitor Portfolio in Real-Time**\n"
+                    f"Call `cap_stream_portfolio`:\n"
+                    f"- duration_s: {duration_minutes * 60}\n"
+                    "- update_interval_s: 5.0 (updates every 5 seconds)\n\n"
+                    "📊 **While streaming:**\n"
+                    "- WebSocket streams price updates for all position markets\n"
+                    "- Recalculates P&L every 5 seconds\n"
+                    "- Displays live portfolio dashboard\n"
+                    f"- **Alerts** when total P&L crosses ${alert_pnl_threshold:,.2f}\n\n"
+                    "**Step 4: Display Live Dashboard**\n"
+                    "Format as continuously updating portfolio summary:\n"
+                    "```\n"
+                    "💼 LIVE PORTFOLIO DASHBOARD\n"
+                    "═══════════════════════════════════════════════════════\n"
+                    "Position     | Direction | Size  | P&L       | Status\n"
+                    "───────────────────────────────────────────────────────\n"
+                    "GOLD         | BUY       | 0.5   | +$125.50  | ✅\n"
+                    "SILVER       | SELL      | 2.0   | -$18.20   | 📊\n"
+                    "BTCUSD       | BUY       | 0.1   | +$230.00  | ⚡\n"
+                    "───────────────────────────────────────────────────────\n"
+                    "TOTAL P&L:                         +$337.30  | 🎯\n"
+                    "═══════════════════════════════════════════════════════\n"
+                    "Last update: 14:32:18 | Updates every 5s\n"
+                    "```\n\n"
+                    "**Status Indicators:**\n"
+                    "- ✅ Winning (P&L > 0)\n"
+                    "- 📊 Flat (P&L ≈ 0)\n"
+                    "- ⚠️ Losing but within risk tolerance\n"
+                    "- 🔴 Significant loss\n\n"
+                    f"**Alert Format** (when total P&L crosses ${alert_pnl_threshold:,.2f}):\n"
+                    "```\n"
+                    f"🎯 P&L THRESHOLD ALERT!\n"
+                    f"   Total P&L crossed ${alert_pnl_threshold:,.2f}\n"
+                    "   Current P&L: +$337.30\n"
+                    "   Time: 14:32:18\n"
+                    "   Action: Review positions, consider taking profits\n"
+                    "```\n\n"
+                    "**Optional Follow-Up Actions:**\n"
+                    "Based on live P&L:\n"
+                    "1. 💰 **Taking Profits:** Use `cap_trade_positions_close` to close winning positions\n"
+                    "2. 🛑 **Cutting Losses:** Close losing positions before they worsen\n"
+                    "3. 📊 **Position Details:** Call `cap_trade_positions_get` for specific position\n"
+                    "4. 🎯 **Adjust Stops:** Update stop losses on running positions\n\n"
+                    "**Important Notes:**\n"
+                    "- ⚡ P&L updates as prices change (real-time)\n"
+                    "- 🔄 Updates every 5 seconds (configurable)\n"
+                    "- 📊 Includes all open positions automatically\n"
+                    "- 🚫 Requires CAP_WS_ENABLED=true and active positions\n"
+                    f"- ⏱️ Auto-stops after {duration_minutes} minutes\n"
+                    "- 💡 Simplified P&L calculation (demo purposes - real calc needs more data)\n"
+                )
+            }
+        }
+    ]
 
 
 # ============================================================

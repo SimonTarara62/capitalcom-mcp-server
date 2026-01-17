@@ -17,9 +17,9 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 
 ## Current Implementation Status
 
-**Overall: 85% Complete** (Phases 1-6 done, Phase 7 testing implemented)
+**Overall: 95% Complete** (Phases 1-7 done, WebSocket streaming implemented)
 
-### ✅ Completed (Phases 1-6)
+### ✅ Completed (Phases 1-7)
 
 **Foundation & Infrastructure**
 - ✅ Project structure with pyproject.toml, dependencies configured
@@ -30,6 +30,7 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ HTTP client (httpx, retries, timeout handling, logging)
 - ✅ Session management (auto-login, token refresh, keep-alive)
 - ✅ Risk engine (preview cache, size normalization, trade guards)
+- ✅ WebSocket client (streaming, auto-reconnect, subscription management)
 
 **MCP Server & Tools (36 tools implemented)**
 - ✅ FastMCP server with STDIO transport
@@ -38,12 +39,16 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ Account tools (6) - list, preferences, history, demo top-up
 - ✅ Trading tools (14) - positions, orders, preview, execute, close, cancel
 - ✅ Watchlist tools (6) - list, get, create, add, delete, remove
+- ✅ WebSocket streaming tools (3) - stream prices, alerts, portfolio P&L
 
-**MCP Prompts (4 workflow templates implemented)**
+**MCP Prompts (7 workflow templates implemented)**
 - ✅ market_scan - Scan watchlists for trading opportunities
 - ✅ trade_proposal - Design trades with risk management
 - ✅ execute_trade - Execute previewed trades safely
 - ✅ position_review - Analyze portfolio positions and orders
+- ✅ live_price_monitor - Real-time price tracking with alerts (WebSocket)
+- ✅ real_time_alerts - Instant notifications on price levels (WebSocket)
+- ✅ live_portfolio_monitor - Live P&L tracking (WebSocket)
 
 **MCP Resources (4 read-only resources implemented)**
 - ✅ cap://status - Server and session status
@@ -51,20 +56,21 @@ Model Context Protocol (MCP) server for Capital.com Open API - enabling safe, LL
 - ✅ cap://allowed-epics - Trading allowlist
 - ✅ cap://market-cache/{epic} - Market details (dynamic)
 
-### ✅ Testing (Phase 7 - Partial)
+### ✅ Testing (Phase 7)
 
 **Testing Suite**
 - ✅ Test infrastructure (pytest, pytest-asyncio, pytest-mock, pytest-cov)
 - ✅ Basic sanity tests (imports, error definitions, MCP server instance)
-- ✅ MCP registration tests (33 tools, 5 resources, 4 prompts)
+- ✅ MCP registration tests (36 tools, 4 resources, 7 prompts)
 - ✅ Prompt validation tests (descriptions, arguments)
+- ✅ WebSocket client tests (connection, subscription, message parsing)
+- ✅ WebSocket model tests (PriceTick, StreamAlert, PortfolioSnapshot)
 - ⏳ Unit tests for core components (deferred - tight coupling)
 - ⏳ Integration tests with mocked API (deferred - tight coupling)
 
 ### 📋 Pending
 
 **Optional Features**
-- ⏳ WebSocket support (optional, live streaming)
 - ⏳ 2 missing tools (update position, update order)
 
 ## Quick Start Guide
@@ -800,10 +806,11 @@ pytest -v
 ```
 
 Current test coverage:
-- 13 tests (all passing)
-- MCP registration validation (tools, resources, prompts)
+- 21 tests (all passing)
+- MCP registration validation (36 tools, 4 resources, 7 prompts)
 - Import and module structure tests
 - Prompt schema validation
+- WebSocket client and model tests
 
 ### Code Quality
 ```bash

@@ -274,3 +274,36 @@ class WatchlistAddMarketRequest(BaseModel):
     watchlist_id: str = Field(..., description="Watchlist ID")
     epic: str = Field(..., description="Market EPIC")
     confirm: bool = Field(default=False, description="Explicit confirmation")
+
+
+# ============================================================
+# WebSocket Streaming Models
+# ============================================================
+
+
+class PriceTick(BaseModel):
+    """WebSocket price update."""
+
+    epic: str = Field(..., description="Market EPIC")
+    bid: float = Field(..., description="Bid price")
+    offer: float = Field(..., description="Offer/ask price")
+    timestamp: str = Field(..., description="Update timestamp (ISO 8601)")
+    change_percent: Optional[float] = Field(default=None, description="Price change percentage")
+
+
+class StreamAlert(BaseModel):
+    """Alert trigger event."""
+
+    epic: str = Field(..., description="Market EPIC")
+    condition: str = Field(..., description="Alert condition (LEVEL_ABOVE, LEVEL_BELOW, BREAKOUT)")
+    trigger_price: float = Field(..., description="Price that triggered the alert")
+    current_price: float = Field(..., description="Current market price")
+    timestamp: str = Field(..., description="Alert timestamp (ISO 8601)")
+
+
+class PortfolioSnapshot(BaseModel):
+    """Real-time portfolio state."""
+
+    positions: list[dict[str, Any]] = Field(..., description="List of open positions")
+    total_pnl: float = Field(..., description="Total portfolio P&L")
+    timestamp: str = Field(..., description="Snapshot timestamp (ISO 8601)")
