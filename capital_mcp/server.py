@@ -8,9 +8,17 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from capital_cli.core.models import (
+    Direction,
+    PreviewPositionRequest,
+    PreviewWorkingOrderRequest,
+    WorkingOrderType,
+)
+from capital_cli.services.confirmations import get_confirmation, wait_for_confirmation
 from fastmcp import FastMCP
 
 from .context import get_app, lifespan
+from .serialization import preview_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -251,3 +259,269 @@ async def cap_account_demo_topup(amount: float, confirm: bool = False) -> dict[s
     app = get_app()
     await app.session.ensure_logged_in()
     return await app.accounts.demo_topup(amount, confirm=confirm)
+
+
+# ============================================================
+# Trading tools — read-only + confirmations
+# ============================================================
+
+
+@mcp.tool()
+async def cap_trade_positions_list() -> dict[str, Any]:
+    """List all open positions (P&L, direction, size, attached orders)."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.list_positions()
+
+
+@mcp.tool()
+async def cap_trade_positions_get(deal_id: str) -> dict[str, Any]:
+    """Get a single position's details by deal ID."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.get_position(deal_id)
+
+
+@mcp.tool()
+async def cap_trade_orders_list() -> dict[str, Any]:
+    """List all working orders (pending LIMIT/STOP that haven't triggered)."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.list_orders()
+
+
+@mcp.tool()
+async def cap_trade_confirm_get(deal_reference: str) -> dict[str, Any]:
+    """Get deal-confirmation status (ACCEPTED/REJECTED/pending) for a deal reference."""
+    await get_app().session.ensure_logged_in()
+    return await get_confirmation(deal_reference)
+
+
+@mcp.tool()
+async def cap_trade_confirm_wait(
+    deal_reference: str,
+    timeout_s: float = 15.0,
+    poll_interval_ms: int = 500,
+) -> dict[str, Any]:
+    """Poll the confirmation endpoint until ACCEPTED/REJECTED or timeout."""
+    await get_app().session.ensure_logged_in()
+    return await wait_for_confirmation(
+        deal_reference, timeout_s=timeout_s, poll_interval_ms=poll_interval_ms
+    )
+
+
+# ============================================================
+# Trading tools — preview (no side effects)
+# ============================================================
+
+
+@mcp.tool()
+async def cap_trade_preview_position(
+    epic: str,
+    direction: str,
+    size: float,
+    guaranteed_stop: bool = False,
+    trailing_stop: bool = False,
+    stop_level: float | None = None,
+    stop_distance: float | None = None,
+    stop_amount: float | None = None,
+    profit_level: float | None = None,
+    profit_distance: float | None = None,
+    profit_amount: float | None = None,
+) -> dict[str, Any]:
+    """Preview a position (NO SIDE EFFECTS). Runs the full risk pipeline; returns preview_id."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    request = PreviewPositionRequest(
+        epic=epic,
+        direction=Direction(direction.upper()),
+        size=size,
+        guaranteed_stop=guaranteed_stop,
+        trailing_stop=trailing_stop,
+        stop_level=stop_level,
+        stop_distance=stop_distance,
+        stop_amount=stop_amount,
+        profit_level=profit_level,
+        profit_distance=profit_distance,
+        profit_amount=profit_amount,
+    )
+    preview = await app.trading.preview_position(request)
+    return preview_to_dict(preview)
+
+
+@mcp.tool()
+async def cap_trade_preview_working_order(
+    epic: str,
+    direction: str,
+    type: str,
+    level: float,
+    size: float,
+    guaranteed_stop: bool = False,
+    trailing_stop: bool = False,
+    stop_level: float | None = None,
+    stop_distance: float | None = None,
+    stop_amount: float | None = None,
+    profit_level: float | None = None,
+    profit_distance: float | None = None,
+    profit_amount: float | None = None,
+    good_till_date: str | None = None,
+) -> dict[str, Any]:
+    """Preview a working order (NO SIDE EFFECTS). type is LIMIT or STOP. Returns preview_id."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    request = PreviewWorkingOrderRequest(
+        epic=epic,
+        direction=Direction(direction.upper()),
+        type=WorkingOrderType(type.upper()),
+        level=level,
+        size=size,
+        guaranteed_stop=guaranteed_stop,
+        trailing_stop=trailing_stop,
+        stop_level=stop_level,
+        stop_distance=stop_distance,
+        stop_amount=stop_amount,
+        profit_level=profit_level,
+        profit_distance=profit_distance,
+        profit_amount=profit_amount,
+        good_till_date=good_till_date,
+    )
+    preview = await app.trading.preview_working_order(request)
+    return preview_to_dict(preview)
+
+
+# ============================================================
+# Trading tools — execute / close / cancel (side effects, guarded by the SDK)
+# ============================================================
+
+
+@mcp.tool()
+async def cap_trade_execute_position(
+    preview_id: str,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Execute a previewed position (CREATES A REAL TRADE). SDK enforces all safety gates."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.execute_position(
+        preview_id, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
+
+
+@mcp.tool()
+async def cap_trade_execute_working_order(
+    preview_id: str,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Execute a previewed working order (CREATES A REAL ORDER). SDK enforces all safety gates."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.execute_working_order(
+        preview_id, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
+
+
+@mcp.tool()
+async def cap_trade_positions_close(
+    deal_id: str,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Close an open position (SIDE EFFECT). Requires confirm + trading enabled."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.close_position(
+        deal_id, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
+
+
+@mcp.tool()
+async def cap_trade_orders_cancel(
+    deal_id: str,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Cancel a working order (SIDE EFFECT). Requires confirm + trading enabled."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.trading.cancel_order(
+        deal_id, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
+
+
+# ============================================================
+# Trading tools — amend (side effects, guarded by the SDK)
+# ============================================================
+
+
+@mcp.tool()
+async def cap_trade_positions_amend(
+    deal_id: str,
+    stop_level: float | None = None,
+    stop_distance: float | None = None,
+    profit_level: float | None = None,
+    profit_distance: float | None = None,
+    guaranteed_stop: bool | None = None,
+    trailing_stop: bool | None = None,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Amend stop-loss / take-profit on an open position (SIDE EFFECT). Requires confirm."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    body: dict[str, Any] = {}
+    if stop_level is not None:
+        body["stopLevel"] = stop_level
+    if stop_distance is not None:
+        body["stopDistance"] = stop_distance
+    if profit_level is not None:
+        body["profitLevel"] = profit_level
+    if profit_distance is not None:
+        body["profitDistance"] = profit_distance
+    if guaranteed_stop is not None:
+        body["guaranteedStop"] = guaranteed_stop
+    if trailing_stop is not None:
+        body["trailingStop"] = trailing_stop
+    return await app.trading.amend_position(
+        deal_id, body=body, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
+
+
+@mcp.tool()
+async def cap_trade_orders_amend(
+    deal_id: str,
+    level: float | None = None,
+    stop_level: float | None = None,
+    stop_distance: float | None = None,
+    profit_level: float | None = None,
+    profit_distance: float | None = None,
+    good_till_date: str | None = None,
+    confirm: bool = False,
+    wait_for_confirm: bool = True,
+    timeout_s: float = 15.0,
+) -> dict[str, Any]:
+    """Amend a working order's level/expiry/stops-limits (SIDE EFFECT). Requires confirm."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    body: dict[str, Any] = {}
+    if level is not None:
+        body["level"] = level
+    if stop_level is not None:
+        body["stopLevel"] = stop_level
+    if stop_distance is not None:
+        body["stopDistance"] = stop_distance
+    if profit_level is not None:
+        body["profitLevel"] = profit_level
+    if profit_distance is not None:
+        body["profitDistance"] = profit_distance
+    if good_till_date is not None:
+        body["goodTillDate"] = good_till_date
+    return await app.trading.amend_order(
+        deal_id, body=body, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
+    )
