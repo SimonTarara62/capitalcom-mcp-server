@@ -525,3 +525,60 @@ async def cap_trade_orders_amend(
     return await app.trading.amend_order(
         deal_id, body=body, confirm=confirm, wait=wait_for_confirm, timeout_s=timeout_s
     )
+
+
+# ============================================================
+# Watchlist tools
+# ============================================================
+
+
+@mcp.tool()
+async def cap_watchlists_list() -> dict[str, Any]:
+    """List all watchlists (IDs and names)."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.list()
+
+
+@mcp.tool()
+async def cap_watchlists_get(watchlist_id: str) -> dict[str, Any]:
+    """Get a watchlist's details including its markets."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.get(watchlist_id)
+
+
+@mcp.tool()
+async def cap_watchlists_create(name: str, confirm: bool = False) -> dict[str, Any]:
+    """Create a new watchlist (1-100 chars). Requires confirm when configured."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.create(name, confirm=confirm)
+
+
+@mcp.tool()
+async def cap_watchlists_add_market(
+    watchlist_id: str, epic: str, confirm: bool = False
+) -> dict[str, Any]:
+    """Add a market (EPIC) to a watchlist. Requires confirm when configured."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.add_market(watchlist_id, epic, confirm=confirm)
+
+
+@mcp.tool()
+async def cap_watchlists_remove_market(
+    watchlist_id: str, epic: str, confirm: bool = False
+) -> dict[str, Any]:
+    """Remove a market (EPIC) from a watchlist. Requires confirm when configured."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.remove_market(watchlist_id, epic, confirm=confirm)
+
+
+@mcp.tool()
+async def cap_watchlists_delete(watchlist_id: str, confirm: bool = False) -> dict[str, Any]:
+    """Delete a watchlist. Requires confirm when configured."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.watchlists.delete(watchlist_id, confirm=confirm)
