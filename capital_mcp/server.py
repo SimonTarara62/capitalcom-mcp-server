@@ -6,6 +6,7 @@ SDK; this module only maps MCP tools/resources/prompts onto SDK calls.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 from capital_cli.core.models import (
@@ -582,3 +583,187 @@ async def cap_watchlists_delete(watchlist_id: str, confirm: bool = False) -> dic
     app = get_app()
     await app.session.ensure_logged_in()
     return await app.watchlists.delete(watchlist_id, confirm=confirm)
+
+
+# ============================================================
+# Streaming tools (WebSocket; engine via app.stream)
+# ============================================================
+
+
+@mcp.tool()
+async def cap_stream_prices(
+    epics: list[str],
+    duration_s: float = 300.0,
+    update_interval_s: float = 1.0,
+) -> dict[str, Any]:
+    """Stream live bid/offer for up to 40 EPICs for duration_s seconds (WebSocket)."""
+    if not epics:
+        return {"error": "No EPICs provided", "message": "Specify at least one EPIC."}
+    if len(epics) > 40:
+        return {
+            "error": "Too many EPICs",
+            "message": f"Max 40 concurrent subscriptions (requested: {len(epics)}).",
+            "max_allowed": 40,
+        }
+    app = get_app()
+    await app.session.ensure_logged_in()
+    ticks: list[dict[str, Any]] = []
+    last = datetime.now(timezone.utc)
+    try:
+        async for tick in app.stream.prices(epics, duration=duration_s):
+            now = datetime.now(timezone.utc)
+            if (now - last).total_seconds() >= update_interval_s:
+                ticks.append(tick.model_dump())
+                last = now
+        return {
+            "status": "completed",
+            "epics_monitored": epics,
+            "duration_s": duration_s,
+            "ticks_received": len(ticks),
+            "ticks": ticks[-100:],
+        }
+    except Exception as e:  # surface streaming errors as data
+        return {"error": "Streaming failed", "message": str(e), "ticks_before_error": len(ticks)}
+
+
+@mcp.tool()
+async def cap_stream_candles(
+    epics: list[str],
+    resolutions: list[str],
+    bar_type: str = "classic",
+    duration_s: float = 300.0,
+    update_interval_s: float = 1.0,
+) -> dict[str, Any]:
+    """Stream live OHLC bars for up to 40 EPICs at the given resolutions (WebSocket).
+
+    resolutions e.g. ["MINUTE", "HOUR"]; bar_type "classic" or "heikin-ashi".
+    """
+    if not epics:
+        return {"error": "No EPICs provided", "message": "Specify at least one EPIC."}
+    if len(epics) > 40:
+        return {
+            "error": "Too many EPICs",
+            "message": f"Max 40 concurrent subscriptions (requested: {len(epics)}).",
+            "max_allowed": 40,
+        }
+    if not resolutions:
+        return {"error": "No resolutions provided", "message": "Specify at least one resolution."}
+    app = get_app()
+    await app.session.ensure_logged_in()
+    bars: list[dict[str, Any]] = []
+    last = datetime.now(timezone.utc)
+    try:
+        async for bar in app.stream.candles(
+            epics, resolutions, bar_type=bar_type, duration=duration_s
+        ):
+            now = datetime.now(timezone.utc)
+            if (now - last).total_seconds() >= update_interval_s:
+                bars.append(bar.model_dump())
+                last = now
+        return {
+            "status": "completed",
+            "epics_monitored": epics,
+            "resolutions": resolutions,
+            "bars_received": len(bars),
+            "bars": bars[-100:],
+        }
+    except Exception as e:  # noqa: BLE001
+        return {"error": "Streaming failed", "message": str(e), "bars_before_error": len(bars)}
+
+
+@mcp.tool()
+async def cap_stream_alerts(
+    alerts: dict[str, dict[str, Any]],
+    duration_s: float = 300.0,
+    auto_close: bool = False,
+) -> dict[str, Any]:
+    """Monitor EPICs for price-level crossings. alerts: {EPIC: {level, direction: ABOVE|BELOW}}."""
+    if not alerts:
+        return {"error": "No alerts configured", "message": "Specify at least one alert."}
+    epics = list(alerts.keys())
+    if len(epics) > 40:
+        return {"error": "Too many alerts", "message": f"Max 40 (requested: {len(epics)})."}
+    app = get_app()
+    await app.session.ensure_logged_in()
+    triggered: list[dict[str, Any]] = []
+    triggered_epics: set[str] = set()
+    try:
+        async for tick in app.stream.prices(epics, duration=duration_s):
+            if auto_close and tick.epic in triggered_epics:
+                continue
+            cfg = alerts.get(tick.epic)
+            if not cfg:
+                continue
+            level = float(cfg["level"])
+            direction = str(cfg["direction"]).upper()
+            mid = (tick.bid + tick.offer) / 2
+            hit = (direction == "ABOVE" and mid >= level) or (direction == "BELOW" and mid <= level)
+            if hit:
+                triggered.append(
+                    {
+                        "epic": tick.epic,
+                        "condition": f"LEVEL_{direction}",
+                        "trigger_price": level,
+                        "current_price": mid,
+                    }
+                )
+                triggered_epics.add(tick.epic)
+                if auto_close and len(triggered_epics) == len(epics):
+                    break
+        return {
+            "status": "completed",
+            "alerts_configured": len(alerts),
+            "alerts_triggered": len(triggered),
+            "triggered_alerts": triggered,
+            "auto_close": auto_close,
+        }
+    except Exception as e:  # noqa: BLE001
+        return {
+            "error": "Alert monitoring failed",
+            "message": str(e),
+            "triggered_alerts": triggered,
+        }
+
+
+@mcp.tool()
+async def cap_stream_portfolio(
+    duration_s: float = 300.0,
+    update_interval_s: float = 5.0,
+) -> dict[str, Any]:
+    """Stream live portfolio snapshots for open positions for duration_s seconds (WebSocket)."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    try:
+        positions = (await app.trading.list_positions()).get("positions", [])
+        if not positions:
+            return {"status": "no_positions", "message": "No open positions.", "positions": []}
+        epics = [p.get("market", {}).get("epic") or p.get("epic") for p in positions]
+        epics = [e for e in epics if e]
+        snapshots: list[dict[str, Any]] = []
+        last = datetime.now(timezone.utc)
+        async for _tick in app.stream.portfolio(epics, duration=duration_s):
+            now = datetime.now(timezone.utc)
+            if (now - last).total_seconds() < update_interval_s:
+                continue
+            last = now
+            snapshots.append(
+                {
+                    "positions": [
+                        {
+                            "deal_id": p.get("position", {}).get("dealId") or p.get("dealId"),
+                            "epic": p.get("market", {}).get("epic") or p.get("epic"),
+                        }
+                        for p in positions
+                    ],
+                    "timestamp": now.isoformat(),
+                }
+            )
+        return {
+            "status": "completed",
+            "duration_s": duration_s,
+            "positions_monitored": len(positions),
+            "snapshots_collected": len(snapshots),
+            "snapshots": snapshots[-20:],
+        }
+    except Exception as e:  # noqa: BLE001
+        return {"error": "Portfolio streaming failed", "message": str(e)}
