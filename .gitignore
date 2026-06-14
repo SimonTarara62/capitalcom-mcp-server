@@ -26,9 +26,15 @@ ENV/
 env/
 .venv
 
-# Environment variables
+# Environment variables & secrets (NEVER commit credentials)
 .env
-.env.local
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+secrets/
+credentials.json
 
 # IDE
 .vscode/
@@ -69,3 +75,7 @@ archive/
 
 # External documentation (reference only, large Postman collection)
 doc/
+
+# Internal / planning docs — not for the public repo
+docs/superpowers/
+IMPLEMENTATION_SUMMARY.md
