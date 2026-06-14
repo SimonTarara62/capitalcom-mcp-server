@@ -52,7 +52,7 @@ jobs:
           CAP_API_PASSWORD: ${{ secrets.CAP_API_PASSWORD }}
         run: |
           if [ -z "$CAP_API_KEY" ]; then echo "no demo secrets configured; skipping e2e"; exit 0; fi
-          printf 'CAP_ENV=demo\nCAP_API_KEY=%s\nCAP_IDENTIFIER=%s\nCAP_API_PASSWORD=%s\nCAP_ALLOW_TRADING=true\nCAP_ALLOWED_EPICS=GOLD\nCAP_WS_ENABLED=true\n' \
+          printf 'CAP_ENV=demo\nCAP_API_KEY=%s\nCAP_IDENTIFIER=%s\nCAP_API_PASSWORD=%s\nCAP_ALLOW_TRADING=true\nCAP_ALLOWED_EPICS=BTCUSD,GOLD\nCAP_WS_ENABLED=true\n' \
             "$CAP_API_KEY" "$CAP_IDENTIFIER" "$CAP_API_PASSWORD" > .env
       - name: Full e2e via MCP (every tool, incl. executions)
         run: |
