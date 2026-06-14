@@ -1,21 +1,15 @@
 [project]
-name = "capital-mcp"
-version = "0.1.0"
-description = "Model Context Protocol server for Capital.com Open API"
-authors = [
-    {name = "Capital MCP Team"}
-]
+name = "capitalcom-mcp"
+version = "0.2.0"
+description = "Model Context Protocol server for the Capital.com Open API (built on capitalcom-cli)"
+authors = [{name = "Simon Tarara"}]
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 
 dependencies = [
-    "fastmcp>=0.2.0",
-    "httpx>=0.27.0",
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
-    "python-dotenv>=1.0.0",
-    "websockets>=12.0",
+    "fastmcp>=3.0,<4",
+    "capitalcom-cli>=0.6,<0.7",
 ]
 
 [project.optional-dependencies]
@@ -23,53 +17,43 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.1.0",
-    "pytest-mock>=3.12.0",
-    "black>=24.0.0",
     "ruff>=0.3.0",
     "mypy>=1.9.0",
+    "build>=1.2.0",
 ]
+
+[project.scripts]
+capitalcom-mcp = "capital_mcp.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/SimonTarara62/capitalcom-mcp-server"
+Issues = "https://github.com/SimonTarara62/capitalcom-mcp-server/issues"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 100
-target-version = ["py310", "py311", "py312"]
+[tool.setuptools]
+packages = ["capital_mcp"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-]
-ignore = [
-    "E501",  # line too long (handled by black)
-    "B008",  # do not perform function calls in argument defaults
-]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = ["E501", "B008"]
 
 [tool.mypy]
 python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
 ignore_missing_imports = true
+check_untyped_defs = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-addopts = [
-    "--strict-markers",
-    "--cov=capital_mcp",
-    "--cov-report=term-missing",
-    "--cov-report=html",
+addopts = ["--strict-markers", "-m", "not e2e"]
+markers = [
+    "e2e: end-to-end tests that hit the real Capital.com DEMO API through the MCP server (opt-in: set CAP_MCP_E2E=1 and run with -m e2e)",
 ]
