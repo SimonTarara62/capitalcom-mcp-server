@@ -1,3 +1,3 @@
-"""Capital.com MCP Server - Model Context Protocol server for Capital.com Open API."""
+"""Capital.com MCP server — a thin FastMCP layer over the capital_cli SDK."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
