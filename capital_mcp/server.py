@@ -171,3 +171,83 @@ async def cap_market_sentiment(market_id: str) -> dict[str, Any]:
     app = get_app()
     await app.session.ensure_logged_in()
     return await app.markets.sentiment([market_id])
+
+
+# ============================================================
+# Account tools
+# ============================================================
+
+
+@mcp.tool()
+async def cap_account_list() -> dict[str, Any]:
+    """List all trading accounts (balance, currency, type). Requires authentication."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    data = await app.accounts.list()
+    data["active_account_id"] = app.session.get_status().account_id
+    return data
+
+
+@mcp.tool()
+async def cap_account_preferences_get() -> dict[str, Any]:
+    """Get account preferences (hedging mode, per-asset-class leverage)."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.accounts.get_preferences()
+
+
+@mcp.tool()
+async def cap_account_preferences_set(
+    hedging_mode: bool | None = None,
+    leverages: dict[str, int] | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """Set account preferences (TRADE-GATED). Requires confirm=true when configured."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.accounts.set_preferences(
+        hedging=hedging_mode, leverages=leverages, confirm=confirm
+    )
+
+
+@mcp.tool()
+async def cap_account_history_activity(
+    from_date: str | None = None,
+    to_date: str | None = None,
+    last_period: int = 600,
+    detailed: bool = False,
+    deal_id: str | None = None,
+) -> dict[str, Any]:
+    """Get account activity history (deals, orders, updates). detailed adds fields; deal_id filters."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.accounts.history_activity(
+        last_period=last_period,
+        from_date=from_date,
+        to_date=to_date,
+        detailed=detailed,
+        deal_id=deal_id,
+    )
+
+
+@mcp.tool()
+async def cap_account_history_transactions(
+    from_date: str | None = None,
+    to_date: str | None = None,
+    last_period: int = 600,
+    type: str | None = None,
+) -> dict[str, Any]:
+    """Get transaction history (deposits, withdrawals, P&L). Optional type filter."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.accounts.history_transactions(
+        last_period=last_period, type_=type, from_date=from_date, to_date=to_date
+    )
+
+
+@mcp.tool()
+async def cap_account_demo_topup(amount: float, confirm: bool = False) -> dict[str, Any]:
+    """Top up the demo account balance (DEMO ONLY). The SDK enforces demo + confirm."""
+    app = get_app()
+    await app.session.ensure_logged_in()
+    return await app.accounts.demo_topup(amount, confirm=confirm)
