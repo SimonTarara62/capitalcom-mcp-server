@@ -37,11 +37,18 @@ async def test_e2e_session_ping(mcp_client):
 
 async def test_e2e_session_switch_account(mcp_client):
     accounts = (await _call(mcp_client, "cap_account_list"))["accounts"]
-    active = next((a for a in accounts if a.get("preferred")), accounts[0])
-    data = await _call(
-        mcp_client, "cap_session_switch_account", {"account_id": active["accountId"]}
+    active_id = next(
+        (a["accountId"] for a in accounts if a.get("preferred")), accounts[0]["accountId"]
     )
-    assert data.get("active_account_id") == active["accountId"]
+    others = [a["accountId"] for a in accounts if a["accountId"] != active_id]
+    if not others:
+        pytest.skip("only one account on this demo login")
+    try:
+        data = await _call(mcp_client, "cap_session_switch_account", {"account_id": others[0]})
+        assert data.get("active_account_id") == others[0]
+    finally:
+        # restore the original active account
+        await _call(mcp_client, "cap_session_switch_account", {"account_id": active_id})
 
 
 async def test_e2e_session_logout(mcp_client):
@@ -104,8 +111,15 @@ async def test_e2e_account_history(mcp_client):
 
 
 async def test_e2e_account_demo_topup(mcp_client):
-    data = await _call(mcp_client, "cap_account_demo_topup", {"amount": 1000.0, "confirm": True})
-    assert isinstance(data, dict)
+    # A success OR a broker "account.limit.reached" rejection both prove the tool
+    # reached the demo top-up endpoint (the demo balance may already be at its cap).
+    try:
+        data = await _call(
+            mcp_client, "cap_account_demo_topup", {"amount": 1000.0, "confirm": True}
+        )
+        assert isinstance(data, dict)
+    except Exception as exc:  # noqa: BLE001 — limit-reached is a valid broker response
+        assert "limit" in str(exc).lower()
 
 
 # ---- trading read + negative ----

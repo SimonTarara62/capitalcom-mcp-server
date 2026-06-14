@@ -15,7 +15,10 @@ pytestmark = pytest.mark.e2e
 if not os.environ.get("CAP_MCP_E2E"):
     pytest.skip("set CAP_MCP_E2E=1 to run e2e", allow_module_level=True)
 
-EPIC = "GOLD"
+# Use a 24/7 market so executions run regardless of the hour (GOLD etc. close
+# outside exchange hours, which would reject market-order execution).
+EPIC = "BTCUSD"
+SIZE = 0.01
 
 
 async def _call(client, name, args=None):
@@ -37,7 +40,7 @@ async def test_e2e_preview_position(mcp_client):
     data = await _call(
         mcp_client,
         "cap_trade_preview_position",
-        {"epic": EPIC, "direction": "BUY", "size": 0.1},
+        {"epic": EPIC, "direction": "BUY", "size": SIZE},
     )
     assert data["preview_id"]
     assert isinstance(data["all_checks_passed"], bool)
@@ -49,7 +52,7 @@ async def test_e2e_preview_working_order(mcp_client):
     data = await _call(
         mcp_client,
         "cap_trade_preview_working_order",
-        {"epic": EPIC, "direction": "BUY", "type": "LIMIT", "level": bid * 0.5, "size": 0.1},
+        {"epic": EPIC, "direction": "BUY", "type": "LIMIT", "level": bid * 0.5, "size": SIZE},
     )
     assert data["preview_id"]
 
@@ -77,7 +80,7 @@ async def test_e2e_execute_close_position(mcp_client):
     preview = await _call(
         mcp_client,
         "cap_trade_preview_position",
-        {"epic": EPIC, "direction": "BUY", "size": 0.1},
+        {"epic": EPIC, "direction": "BUY", "size": SIZE},
     )
     assert preview["all_checks_passed"], preview["checks"]
     executed = await _call(
@@ -102,10 +105,12 @@ async def test_e2e_execute_close_position(mcp_client):
     )
     assert deal_id, "could not resolve the opened position's dealId"
     try:
+        market = await _call(mcp_client, "cap_market_get", {"epic": EPIC})
+        stop_level = round(market["snapshot"]["bid"] * 0.9, 1)  # valid stop below a BUY
         amended = await _call(
             mcp_client,
             "cap_trade_positions_amend",
-            {"deal_id": deal_id, "stop_distance": 50, "confirm": True},
+            {"deal_id": deal_id, "stop_level": stop_level, "confirm": True},
         )
         assert isinstance(amended, dict)
     finally:
@@ -126,7 +131,7 @@ async def test_e2e_execute_cancel_order(mcp_client):
     preview = await _call(
         mcp_client,
         "cap_trade_preview_working_order",
-        {"epic": EPIC, "direction": "BUY", "type": "LIMIT", "level": level, "size": 0.1},
+        {"epic": EPIC, "direction": "BUY", "type": "LIMIT", "level": level, "size": SIZE},
     )
     assert preview["all_checks_passed"], preview["checks"]
     executed = await _call(
