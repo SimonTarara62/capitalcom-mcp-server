@@ -1,55 +1,15 @@
-#!/usr/bin/env python
-"""Test script to verify MCP prompts are registered correctly."""
+import pytest
 
-import asyncio
-from capital_mcp.server import mcp
+pytestmark = pytest.mark.asyncio
 
 
-async def main():
-    """Test that all prompts are registered."""
-    print("Testing MCP Prompts Registration\n")
-    print("=" * 60)
-
-    # Get all registered prompts
-    prompts = await mcp.get_prompts()
-
-    print(f"\nTotal prompts registered: {len(prompts)}")
-    print("\nRegistered prompts:")
-    print("-" * 60)
-
-    for prompt_name in prompts:
-        print(f"\n✓ {prompt_name}")
-
-        # Get prompt details
-        prompt = await mcp.get_prompt(prompt_name)
-        if prompt and prompt.description:
-            # Get first line of description
-            desc = prompt.description.strip().split('\n')[0]
-            print(f"  {desc}")
-
-        # Show arguments if available
-        if prompt and prompt.arguments:
-            args = []
-            for arg in prompt.arguments:
-                if arg.required:
-                    args.append(f"{arg.name} (required)")
-                else:
-                    args.append(f"{arg.name}")
-            print(f"  Arguments: {', '.join(args) if args else 'none'}")
-
-    print("\n" + "=" * 60)
-    print("✓ All prompts registered successfully!")
-
-    print("\n" + "=" * 60)
-    print("\n✅ SUCCESS: All 4 MCP prompts are registered and ready to use!")
-    print("\nYou can now use these prompts in Claude Desktop by invoking them")
-    print("in conversation. For example:")
-    print("  - 'Use the market_scan prompt'")
-    print("  - 'Help me with a trade proposal for SILVER'")
-    print("  - 'Review my positions'")
-    print("\nThe prompts will guide Claude through structured workflows for")
-    print("market analysis, trade planning, execution, and position review.")
+async def test_prompts_registered(client):
+    prompts = await client.list_prompts()
+    names = {p.name for p in prompts}
+    assert {"market_scan", "trade_proposal", "execute_trade", "position_review"} <= names
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def test_trade_proposal_renders(client):
+    result = await client.get_prompt("trade_proposal", {"epic": "GOLD", "direction": "BUY"})
+    text = result.messages[0].content.text
+    assert "GOLD" in text
