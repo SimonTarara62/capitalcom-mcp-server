@@ -6,6 +6,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-06-15
+
+### Fixed
+- The server now **starts without credentials**: the app is built lazily on the
+  first broker call instead of eagerly in the lifespan. This lets MCP
+  directories (e.g. Glama) introspect the tool list, and is friendlier for MCP
+  clients (a missing-credential error now surfaces on first use, not at launch).
+
+### Added
+- `Dockerfile` (+ `.dockerignore`) that runs the stdio server and starts
+  credential-free; a foundation for Glama checks and container/VPS hosting.
+
 ## [0.3.2] - 2026-06-15
 
 ### Changed
@@ -47,7 +59,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   full end-to-end test suite driving every tool against the demo API, and PyPI
   Trusted Publishing.
 
-[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.2.0...v0.3.0
