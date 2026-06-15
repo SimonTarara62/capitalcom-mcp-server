@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.simontarara62/capitalcom-mcp-server",
+  "title": "Capital.com MCP Server",
+  "description": "Safe, guarded trading and market-data tools for the Capital.com Open API. Two-phase trades, allowlists, demo-first.",
+  "version": "0.3.0",
+  "repository": {
+    "url": "https://github.com/SimonTarara62/capitalcom-mcp-server",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/SimonTarara62/capitalcom-mcp-server",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "capitalcom-mcp",
+      "version": "0.3.0",
+      "transport": { "type": "stdio" },
+      "runtimeHint": "uvx",
+      "environmentVariables": [
+        { "name": "CAP_ENV_FILE", "description": "Path to a .env file holding credentials (alternative to inline secrets).", "isRequired": false, "isSecret": false },
+        { "name": "CAP_API_KEY", "description": "Capital.com API key (use a DEMO key first).", "isRequired": false, "isSecret": true },
+        { "name": "CAP_IDENTIFIER", "description": "Capital.com account identifier (email).", "isRequired": false, "isSecret": true },
+        { "name": "CAP_API_PASSWORD", "description": "Capital.com API password.", "isRequired": false, "isSecret": true },
+        { "name": "CAP_ENV", "description": "Environment: demo or live (default: demo).", "isRequired": false, "isSecret": false },
+        { "name": "CAP_ALLOW_TRADING", "description": "Set true to enable order execution (off by default).", "isRequired": false, "isSecret": false },
+        { "name": "CAP_ALLOWED_EPICS", "description": "Comma-separated EPIC allowlist for trading, or ALL.", "isRequired": false, "isSecret": false }
+      ]
+    }
+  ]
+}
