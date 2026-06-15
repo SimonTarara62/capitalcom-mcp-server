@@ -28,3 +28,15 @@ the severity warrants.
   `CAP_ALLOW_TRADING=true` **and** the EPIC is allowlisted.
 - Prefer the `CAP_*_CMD` secret-exec helpers or `CAP_ENV_FILE` over inline
   secrets in client configs.
+
+## Tool stability
+
+Tool **names** and their **semantics** are stable within a major version. An
+existing tool's behavior will not silently change between releases: a change
+that alters what a tool does ships as a **new tool name** or a documented
+deprecation, and every such change is recorded in [CHANGELOG.md](CHANGELOG.md).
+This protects MCP clients from "rug-pull" surprises where a trusted tool quietly
+starts doing something different.
+
+To pin against any change at all, pin the exact package version (see the
+README's "Pinning for production / real-money use" note).
