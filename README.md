@@ -1,7 +1,13 @@
+<!-- mcp-name: io.github.simontarara62/capitalcom-mcp-server -->
+
 # Capital.com MCP Server
 
+[![PyPI version](https://img.shields.io/pypi/v/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
+[![Python versions](https://img.shields.io/pypi/pyversions/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 [![CI](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.simontarara62/capitalcom-mcp-server)
+[![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 
 Model Context Protocol server for the Capital.com Open API. Built on the tested
 [`capitalcom-cli`](https://github.com/SimonTarara62/capitalcom-cli) broker engine
@@ -143,6 +149,109 @@ CAP_ENV_FILE=/home/you/.config/capital-mcp/.env \
 
 Or via env (handy in systemd): `CAP_MCP_TRANSPORT=http`, `CAP_MCP_HOST`,
 `CAP_MCP_PORT`. Put it behind a TLS-terminating reverse proxy for any public use.
+
+## What's inside — tools, resources & prompts
+
+This server exposes **42 tools**, **4 resources**, and **7 guided prompts**. All
+tool names are prefixed `cap_` except the two ChatGPT Deep Research adapters
+(`search`, `fetch`). Mutating tools require `confirm=true`; trades are two-phase.
+
+### Session & account
+
+| Tool | What it does |
+| --- | --- |
+| `cap_session_status` | Current login/session state. |
+| `cap_session_login` | Authenticate (optionally `force=true`). |
+| `cap_session_ping` | Keep-alive / liveness check. |
+| `cap_session_logout` | End the session. |
+| `cap_session_switch_account` | Switch the active trading account. |
+| `cap_account_list` | List accounts and the active account id. |
+| `cap_account_preferences_get` | Read account preferences (e.g. hedging mode). |
+| `cap_account_preferences_set` | Update preferences (`confirm` required). |
+| `cap_account_history_activity` | Account activity history. |
+| `cap_account_history_transactions` | Transaction history. |
+| `cap_account_demo_topup` | Top up a **demo** balance (`confirm` required). |
+
+### Market data
+
+| Tool | What it does |
+| --- | --- |
+| `cap_market_search` | Search instruments by term. |
+| `cap_market_get` | Full market details + snapshot for an EPIC. |
+| `cap_market_navigation_root` | Top-level market navigation nodes. |
+| `cap_market_navigation_node` | Drill into a navigation node. |
+| `cap_market_prices` | Historical OHLC candles. |
+| `cap_market_sentiment` | Client long/short positioning. |
+
+### Trading (read → preview → execute → manage)
+
+| Tool | What it does |
+| --- | --- |
+| `cap_trade_positions_list` | Open positions. |
+| `cap_trade_positions_get` | One position by deal id. |
+| `cap_trade_orders_list` | Working (pending) orders. |
+| `cap_trade_confirm_get` | Fetch a deal confirmation by reference. |
+| `cap_trade_confirm_wait` | Poll until a deal confirms (or times out). |
+| `cap_trade_preview_position` | **Phase 1**: validate a market position (no execution). |
+| `cap_trade_preview_working_order` | **Phase 1**: validate a working order. |
+| `cap_trade_execute_position` | **Phase 2**: execute a previewed position (`confirm`). |
+| `cap_trade_execute_working_order` | **Phase 2**: place a previewed working order (`confirm`). |
+| `cap_trade_positions_close` | Close a position (`confirm`). |
+| `cap_trade_orders_cancel` | Cancel a working order (`confirm`). |
+| `cap_trade_positions_amend` | Amend stop/limit on a position (`confirm`). |
+| `cap_trade_orders_amend` | Amend a working order (`confirm`). |
+
+### Watchlists
+
+| Tool | What it does |
+| --- | --- |
+| `cap_watchlists_list` | List watchlists. |
+| `cap_watchlists_get` | Get one watchlist's markets. |
+| `cap_watchlists_create` | Create a watchlist (`confirm`). |
+| `cap_watchlists_add_market` | Add an EPIC (`confirm`). |
+| `cap_watchlists_remove_market` | Remove an EPIC (`confirm`). |
+| `cap_watchlists_delete` | Delete a watchlist (`confirm`). |
+
+### Streaming (WebSocket; requires `CAP_WS_ENABLED=true`)
+
+| Tool | What it does |
+| --- | --- |
+| `cap_stream_prices` | Live bid/ask updates for EPICs. |
+| `cap_stream_candles` | Live OHLC candle updates. |
+| `cap_stream_alerts` | Threshold price alerts. |
+| `cap_stream_portfolio` | Live position/P&L updates. |
+
+### ChatGPT Deep Research adapters
+
+| Tool | What it does |
+| --- | --- |
+| `search` | Read-only instrument search (ChatGPT connector contract). |
+| `fetch` | Read-only instrument fetch by id (ChatGPT connector contract). |
+
+### Resources
+
+| URI | What it returns |
+| --- | --- |
+| `cap://status` | Session/connection status snapshot. |
+| `cap://risk-policy` | Active risk policy (trading flag, caps). |
+| `cap://allowed-epics` | The trading EPIC allowlist. |
+| `cap://market-cache/{epic}` | Cached market snapshot for an EPIC. |
+
+### Guided prompts
+
+Prompts are reusable workflows your client can launch by name. They emit
+step-by-step guidance that orchestrates the tools above — they never trade on
+their own.
+
+| Prompt | Purpose |
+| --- | --- |
+| `market_scan` | Scan a watchlist for opportunities (prices + sentiment). |
+| `trade_proposal` | Design a risk-sized trade and validate it via preview. |
+| `execute_trade` | Safely execute a previously previewed trade. |
+| `position_review` | Review open positions and working orders. |
+| `live_price_monitor` | Stream prices and flag threshold moves. |
+| `real_time_alerts` | Configure and watch live price alerts. |
+| `live_portfolio_monitor` | Stream live portfolio P&L with a threshold. |
 
 ## Safety model
 - Trading off unless `CAP_ALLOW_TRADING=true` **and** the EPIC is in

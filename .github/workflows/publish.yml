@@ -59,3 +59,38 @@ jobs:
           path: dist/
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-mcp-registry:
+    name: Publish to MCP Registry
+    needs: publish
+    runs-on: ubuntu-latest
+    # Only on a real Release (tag present). A bare workflow_dispatch has no tag,
+    # which would otherwise write a branch name as the version.
+    if: github.event_name == 'release'
+    permissions:
+      id-token: write   # OIDC for mcp-publisher login github-oidc
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+      - name: Sync server.json version to the release tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 -c "import json,sys; p='server.json'; d=json.load(open(p)); d['version']=sys.argv[1]; d['packages'][0]['version']=sys.argv[1]; json.dump(d,open(p,'w'),indent=2)" "$VERSION"
+          echo "server.json now at version $VERSION"
+      - name: Wait for PyPI to expose the new version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for i in $(seq 1 30); do
+            if curl -fsSL "https://pypi.org/pypi/capitalcom-mcp/$VERSION/json" >/dev/null; then
+              echo "capitalcom-mcp $VERSION is on PyPI"; exit 0
+            fi
+            echo "waiting for PyPI ($i)…"; sleep 10
+          done
+          echo "PyPI did not expose $VERSION in time" >&2; exit 1
+      - name: Authenticate to the MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+      - name: Publish to the MCP Registry
+        run: ./mcp-publisher publish
