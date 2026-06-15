@@ -2,13 +2,6 @@
 
 # Capital.com MCP Server
 
-[![PyPI version](https://img.shields.io/pypi/v/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
-[![Python versions](https://img.shields.io/pypi/pyversions/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
-[![CI](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.SimonTarara62/capitalcom-mcp-server)
-[![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
-
 Self-hosted **Model Context Protocol (MCP)** server for the **Capital.com Open
 API**, written in Python on [FastMCP](https://github.com/jlowin/fastmcp). It
 exposes **42 safe, guarded trading and market-data tools** — two-phase
@@ -18,6 +11,13 @@ broker engine (SDK).
 
 **Works with** Claude Desktop · Claude Code · Cursor · VS Code (Copilot) ·
 Windsurf · ChatGPT — any MCP client.
+
+[![PyPI version](https://img.shields.io/pypi/v/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
+[![Python versions](https://img.shields.io/pypi/pyversions/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
+[![CI](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.SimonTarara62/capitalcom-mcp-server)
+[![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 
 > ⚠️ **Unofficial & educational.** Not affiliated with Capital.com. Trading is
 > risky and this is not financial advice. Trading is **disabled by default**;
