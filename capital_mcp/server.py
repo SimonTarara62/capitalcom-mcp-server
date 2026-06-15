@@ -907,6 +907,8 @@ async def market_scan(
             f"- Timeframe: {timeframe}\n"
             f"- Lookback periods: {lookback_periods}\n\n"
             "After you have a watchlist ID, use this prompt again with the watchlist_id parameter."
+            "\n\n---\n"
+            "_Capital.com MCP — demo account recommended; this is not financial advice._"
         )
 
     return (
@@ -937,6 +939,8 @@ async def market_scan(
         "- Trading opportunity rating (Low/Medium/High)\n"
         "- Brief rationale\n\n"
         "Focus on actionable insights and clear opportunity identification."
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -981,6 +985,8 @@ async def trade_proposal(
 
     return (
         "# Trade Proposal Workflow\n\n"
+        "\n> **Safety:** trades are **two-phase** — `preview` validates, then "
+        "`execute` with `confirm=true` places the order. Never skip the preview.\n"
         f"**Market:** {epic}\n"
         f"**Direction:** {direction_upper}\n"
         f"**Risk:** {risk_percent}% of account balance\n"
@@ -1039,6 +1045,8 @@ async def trade_proposal(
         "Preview ID: [uuid]\n"
         "Risk Checks: [✅/❌ status]\n"
         "```"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -1085,10 +1093,14 @@ async def execute_trade(preview_id: str = "") -> str:
             "User: Execute that trade\n"
             "Assistant: [uses execute_trade prompt with preview_id='abc-123']\n"
             "```"
+            "\n\n---\n"
+            "_Capital.com MCP — demo account recommended; this is not financial advice._"
         )
 
     return (
         "# Execute Trade Workflow\n\n"
+        "\n> **Safety:** trades are **two-phase** — `preview` validates, then "
+        "`execute` with `confirm=true` places the order. Never skip the preview.\n"
         f"**Preview ID:** {preview_id}\n\n"
         "⚠️ **DANGER: This workflow will place a REAL trade with the broker.**\n\n"
         "**Pre-Execution Checklist:**\n"
@@ -1153,6 +1165,8 @@ async def execute_trade(preview_id: str = "") -> str:
         "Reason: [broker rejection reason]\n"
         "Status: REJECTED\n"
         "```"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -1181,6 +1195,8 @@ async def position_review() -> str:
     """
     return (
         "# Position Review Workflow\n\n"
+        "\n> **Safety:** this is read-only. Any follow-up trade must go through "
+        "the two-phase `preview` → `execute` flow.\n"
         "Let's analyze your current trading positions and orders.\n\n"
         "**Step 1: Fetch Open Positions**\n"
         "Call `cap_trade_positions_list` to get all open positions.\n\n"
@@ -1275,6 +1291,8 @@ async def position_review() -> str:
         "- No trades will be executed automatically\n"
         "- All suggestions require user approval before execution\n"
         "- Use appropriate tools (cap_trade_positions_close, etc.) to act on suggestions"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -1329,6 +1347,8 @@ async def live_price_monitor(
             f"- Alert threshold: {threshold_percent}% price movement\n\n"
             "After you have your EPICs list, use this prompt again with the epics parameter.\n"
             'Example: `live_price_monitor(epics=["GOLD", "SILVER"], duration_minutes=2.0)`'
+            "\n\n---\n"
+            "_Capital.com MCP — demo account recommended; this is not financial advice._"
         )
 
     return (
@@ -1380,6 +1400,8 @@ async def live_price_monitor(
         "- 🔄 Auto-reconnects if connection drops (up to 3 attempts)\n"
         "- 🚫 Requires CAP_WS_ENABLED=true in config\n"
         "- 📊 Capital.com sends updates when prices change (not on fixed interval)\n"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -1446,6 +1468,8 @@ async def real_time_alerts(
             "```\n\n"
             "Then call this prompt again with alert_config parameter.\n"
             'Example: `real_time_alerts(alert_config={"GOLD": 2050.0}, duration_minutes=5.0)`'
+            "\n\n---\n"
+            "_Capital.com MCP — demo account recommended; this is not financial advice._"
         )
 
     return (
@@ -1513,6 +1537,8 @@ async def real_time_alerts(
         "- 📊 Checks mid-price: (bid + offer) / 2\n"
         "- 🚫 Requires CAP_WS_ENABLED=true\n"
         f"- ⏱️ Max duration: {duration_minutes} minutes (Capital.com limit: 10 min)\n"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
@@ -1610,6 +1636,8 @@ async def live_portfolio_monitor(
         "- 🚫 Requires CAP_WS_ENABLED=true and active positions\n"
         f"- ⏱️ Auto-stops after {duration_minutes} minutes\n"
         "- 💡 Simplified P&L calculation (demo purposes - real calc needs more data)\n"
+        "\n\n---\n"
+        "_Capital.com MCP — demo account recommended; this is not financial advice._"
     )
 
 
