@@ -1,0 +1,57 @@
+name: Bug report
+description: Report a problem with the Capital.com MCP server
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. **Do not paste API keys or secrets** — redact them.
+  - type: input
+    id: version
+    attributes:
+      label: Server version
+      description: Output of `uvx capitalcom-mcp --version` (or the PyPI version).
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Claude Desktop
+        - Claude Code
+        - Cursor
+        - VS Code (Copilot)
+        - Windsurf
+        - ChatGPT (remote)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include the tool/prompt you called. Redact secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant logs or error output (secrets redacted).
+      render: shell
