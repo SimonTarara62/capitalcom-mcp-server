@@ -1,4 +1,4 @@
-<!-- mcp-name: io.github.simontarara62/capitalcom-mcp-server -->
+<!-- mcp-name: io.github.SimonTarara62/capitalcom-mcp-server -->
 
 # Capital.com MCP Server
 
@@ -6,7 +6,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 [![CI](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.simontarara62/capitalcom-mcp-server)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.SimonTarara62/capitalcom-mcp-server)
 [![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 
 Model Context Protocol server for the Capital.com Open API. Built on the tested
