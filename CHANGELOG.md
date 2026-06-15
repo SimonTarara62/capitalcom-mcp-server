@@ -6,6 +6,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-15
+
+### Fixed
+- MCP Registry server name now uses the correct GitHub namespace casing
+  (`io.github.SimonTarara62/...`) so OIDC-authenticated registry publishing
+  succeeds. The README ownership marker and registry badge were aligned to match.
+
 ## [0.3.0] - 2026-06-15
 
 ### Added
@@ -32,6 +39,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   full end-to-end test suite driving every tool against the demo API, and PyPI
   Trusted Publishing.
 
-[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SimonTarara62/capitalcom-mcp-server/releases/tag/v0.2.0
