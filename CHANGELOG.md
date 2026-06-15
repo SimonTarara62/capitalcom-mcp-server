@@ -6,6 +6,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-06-15
+
+### Changed
+- Clarified the **unofficial** status on disclaimer-less surfaces: the PyPI
+  summary and MCP Registry description now lead with "Unofficial", and the
+  FastMCP server display name is "Capital.com MCP (unofficial)". No code or
+  tool behavior changes. (This project is not affiliated with Capital.com.)
+
 ## [0.3.1] - 2026-06-15
 
 ### Fixed
@@ -39,7 +47,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   full end-to-end test suite driving every tool against the demo API, and PyPI
   Trusted Publishing.
 
-[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SimonTarara62/capitalcom-mcp-server/releases/tag/v0.2.0

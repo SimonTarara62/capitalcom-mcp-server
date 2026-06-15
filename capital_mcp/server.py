@@ -69,7 +69,7 @@ SAFETY (enforced server-side by the SDK risk engine — do not try to bypass)
 - Prefer the demo environment (CAP_ENV=demo) until a workflow is proven.
 """
 
-mcp = FastMCP("Capital.com MCP Server", instructions=INSTRUCTIONS, lifespan=lifespan)
+mcp = FastMCP("Capital.com MCP (unofficial)", instructions=INSTRUCTIONS, lifespan=lifespan)
 
 
 def _version() -> str:
@@ -788,7 +788,7 @@ async def cap_status_resource() -> dict[str, Any]:
     status = app.session.get_status()
     policy = app.risk_policy
     return {
-        "server": {"name": "Capital.com MCP Server", "version": _version()},
+        "server": {"name": "Capital.com MCP (unofficial)", "version": _version()},
         "session": status.model_dump(),
         "risk": {
             "trading_enabled": policy.allow_trading,
