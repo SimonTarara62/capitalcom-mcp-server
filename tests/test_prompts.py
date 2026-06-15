@@ -54,3 +54,12 @@ async def test_trade_prompts_mention_two_phase(client, name):
     result = await client.get_prompt(name, args)
     text = result.messages[0].content.text.lower()
     assert "two-phase" in text or "preview" in text
+
+
+async def test_execute_trade_happy_path_mentions_two_phase(client):
+    # Non-empty preview_id renders the main branch (no API call), which must carry
+    # the explicit two-phase safety reminder.
+    result = await client.get_prompt("execute_trade", {"preview_id": "preview-abc123"})
+    text = result.messages[0].content.text.lower()
+    assert "two-phase" in text
+    assert "confirm=true" in text
