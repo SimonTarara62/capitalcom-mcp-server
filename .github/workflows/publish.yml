@@ -64,6 +64,9 @@ jobs:
     name: Publish to MCP Registry
     needs: publish
     runs-on: ubuntu-latest
+    # Only on a real Release (tag present). A bare workflow_dispatch has no tag,
+    # which would otherwise write a branch name as the version.
+    if: github.event_name == 'release'
     permissions:
       id-token: write   # OIDC for mcp-publisher login github-oidc
       contents: read
@@ -75,7 +78,7 @@ jobs:
       - name: Sync server.json version to the release tag
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          python -c "import json,sys; p='server.json'; d=json.load(open(p)); d['version']=sys.argv[1]; d['packages'][0]['version']=sys.argv[1]; json.dump(d,open(p,'w'),indent=2)" "$VERSION"
+          python3 -c "import json,sys; p='server.json'; d=json.load(open(p)); d['version']=sys.argv[1]; d['packages'][0]['version']=sys.argv[1]; json.dump(d,open(p,'w'),indent=2)" "$VERSION"
           echo "server.json now at version $VERSION"
       - name: Wait for PyPI to expose the new version
         run: |
