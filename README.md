@@ -33,6 +33,27 @@ Or install a persistent command with pipx:
 pipx install capitalcom-mcp
 ```
 
+### Pinning for production / real-money use
+
+`uvx capitalcom-mcp` always runs the **latest** published release. That is fine
+for trying it out, but for production or real-money use, **pin the exact
+version** so an unexpected update can't change tool behavior under you:
+
+```json
+{
+  "mcpServers": {
+    "capitalcom": {
+      "command": "uvx",
+      "args": ["capitalcom-mcp==0.3.3"],
+      "env": { "CAP_ENV_FILE": "/Users/you/.config/capital-mcp/.env" }
+    }
+  }
+}
+```
+
+The CLI form is `uvx capitalcom-mcp==0.3.3 run …`. Pin to a version you have
+reviewed, and bump deliberately after reading the [CHANGELOG](CHANGELOG.md).
+
 ## 1. Add your credentials (once)
 
 Get an API key in the Capital.com app: **Settings → API integrations** (make a
