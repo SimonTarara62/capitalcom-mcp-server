@@ -44,14 +44,14 @@ version** so an unexpected update can't change tool behavior under you:
   "mcpServers": {
     "capitalcom": {
       "command": "uvx",
-      "args": ["capitalcom-mcp==0.3.3"],
+      "args": ["capitalcom-mcp==0.3.4"],
       "env": { "CAP_ENV_FILE": "/Users/you/.config/capital-mcp/.env" }
     }
   }
 }
 ```
 
-The CLI form is `uvx capitalcom-mcp==0.3.3 run …`. Pin to a version you have
+The CLI form is `uvx capitalcom-mcp==0.3.4 run …`. Pin to a version you have
 reviewed, and bump deliberately after reading the [CHANGELOG](CHANGELOG.md).
 
 ## 1. Add your credentials (once)

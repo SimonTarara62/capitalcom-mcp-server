@@ -3,7 +3,7 @@
   "name": "io.github.SimonTarara62/capitalcom-mcp-server",
   "title": "Capital.com MCP Server",
   "description": "Unofficial community MCP for the Capital.com Open API. Guarded two-phase trades; demo-first.",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "repository": {
     "url": "https://github.com/SimonTarara62/capitalcom-mcp-server",
     "source": "github"
@@ -13,7 +13,7 @@
     {
       "registryType": "pypi",
       "identifier": "capitalcom-mcp",
-      "version": "0.3.3",
+      "version": "0.3.4",
       "transport": {
         "type": "stdio"
       },
