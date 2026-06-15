@@ -9,9 +9,15 @@
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.SimonTarara62/capitalcom-mcp-server)
 [![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 
-Model Context Protocol server for the Capital.com Open API. Built on the tested
-[`capitalcom-cli`](https://github.com/SimonTarara62/capitalcom-cli) broker engine
-(SDK), it exposes safe, guarded trading + market-data tools to MCP clients.
+Self-hosted **Model Context Protocol (MCP)** server for the **Capital.com Open
+API**, written in Python on [FastMCP](https://github.com/jlowin/fastmcp). It
+exposes **42 safe, guarded trading and market-data tools** — two-phase
+execution, allowlists, demo-first — to any MCP client, over stdio or HTTP. Built
+on the tested [`capitalcom-cli`](https://github.com/SimonTarara62/capitalcom-cli)
+broker engine (SDK).
+
+**Works with** Claude Desktop · Claude Code · Cursor · VS Code (Copilot) ·
+Windsurf · ChatGPT — any MCP client.
 
 > ⚠️ **Unofficial & educational.** Not affiliated with Capital.com. Trading is
 > risky and this is not financial advice. Trading is **disabled by default**;
