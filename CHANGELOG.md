@@ -6,6 +6,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-06-15
+
+### Added
+- Non-blocking `pip-audit` dependency-audit workflow (weekly + on push) that
+  surfaces known advisories in the resolved dependency tree without gating
+  releases.
+- Weekly scheduled CI run that re-resolves and retests against the latest
+  in-range `capitalcom-cli` SDK, catching upstream regressions between commits.
+
+### Changed
+- Documented a **Tool Stability Policy** in `SECURITY.md` (tool names/semantics
+  are stable within a major version; behaviour-changing edits ship as a new tool
+  name or documented deprecation — anti "rug-pull").
+- README now recommends **pinning the exact version** (`capitalcom-mcp==…`) for
+  production / real-money use. No code or tool behaviour changes.
+
 ## [0.3.3] - 2026-06-15
 
 ### Fixed
@@ -59,7 +75,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   full end-to-end test suite driving every tool against the demo API, and PyPI
   Trusted Publishing.
 
-[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/SimonTarara62/capitalcom-mcp-server/compare/v0.3.0...v0.3.1
