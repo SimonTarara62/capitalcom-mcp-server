@@ -36,12 +36,18 @@ def reset_app() -> None:
 
 @asynccontextmanager
 async def lifespan(_server: FastMCP):
-    """FastMCP lifespan: build the app on startup, close its HTTP client on exit.
+    """FastMCP lifespan: lazily build the app, close its HTTP client on exit.
 
-    We deliberately do NOT log out on shutdown so the cached session token can
-    be reused by the next process (the SDK persists it to a 0600 state file).
+    We deliberately do NOT construct the app eagerly here. Construction calls
+    CapitalComConfig.from_env(), which raises ConfigMissingError without CAP_*
+    credentials — that would stop the server from starting and break
+    credential-free introspection (initialize + tools/list) that MCP
+    directories like Glama rely on. The app is built on the first tool call
+    that needs the broker (every @mcp.tool() calls get_app() at call time).
+
+    We also do NOT log out on shutdown so the cached session token can be
+    reused by the next process (the SDK persists it to a 0600 state file).
     """
-    get_app()  # construct eagerly so import/config errors surface at startup
     try:
         yield
     finally:
