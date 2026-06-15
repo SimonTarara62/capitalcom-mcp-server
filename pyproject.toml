@@ -1,6 +1,6 @@
 [project]
 name = "capitalcom-mcp"
-version = "0.3.2"
+version = "0.3.3"
 description = "Unofficial Model Context Protocol server for the Capital.com Open API (built on capitalcom-cli)"
 authors = [{name = "Simon Tarara"}]
 readme = "README.md"
