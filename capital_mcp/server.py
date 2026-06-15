@@ -979,6 +979,8 @@ async def trade_proposal(
         return (
             f"# Trade Proposal Error\n\n"
             f"Invalid direction: '{direction}'. Must be 'BUY' or 'SELL'."
+            "\n\n---\n"
+            "_Capital.com MCP — demo account recommended; this is not financial advice._"
         )
 
     thesis_section = f"\n**Trading Thesis:**\n{thesis}\n" if thesis else ""

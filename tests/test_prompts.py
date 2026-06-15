@@ -30,6 +30,13 @@ TRADE_PROMPTS = ["trade_proposal", "execute_trade", "position_review"]
 FOOTER = "_Capital.com MCP — demo account recommended; this is not financial advice._"
 
 
+async def test_trade_proposal_error_branch_has_footer(client):
+    result = await client.get_prompt("trade_proposal", {"epic": "BTCUSD", "direction": "INVALID"})
+    text = result.messages[0].content.text
+    assert "Invalid direction" in text
+    assert FOOTER in text
+
+
 @pytest.mark.parametrize("name", PROMPT_NAMES)
 async def test_prompt_renders_with_footer(client, name):
     args = {}
