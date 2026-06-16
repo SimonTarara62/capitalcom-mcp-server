@@ -1,0 +1,26 @@
+name: Glama introspection check
+
+# Manual-only: builds the Dockerfile exactly as Glama would, runs the container
+# with NO credentials, and asserts the MCP tools/list returns the full toolset.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  glama-introspect:
+    name: build image + tools/list (credential-free)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build the image (as Glama does)
+        run: docker build -t capitalcom-mcp:diag .
+      - name: Introspect over stdio with no credentials
+        run: |
+          OUT=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"diag","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+            | timeout 60 docker run --rm -i capitalcom-mcp:diag)
+          echo "$OUT" | python3 -c "import sys,json; ms=[json.loads(l) for l in sys.stdin if l.strip().startswith('{')]; n=next((len(m.get('result',{}).get('tools',[])) for m in ms if m.get('id')==2),0); print('tools:',n); assert n>=40, 'FAIL: expected >=40 tools, got %d'%n; print('PASS: docker image introspects credential-free')"
