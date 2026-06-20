@@ -183,6 +183,7 @@ Or via env (handy in systemd): `CAP_MCP_TRANSPORT=http`, `CAP_MCP_HOST`,
 This server exposes **42 tools**, **4 resources**, and **7 guided prompts**. All
 tool names are prefixed `cap_` except the two ChatGPT Deep Research adapters
 (`search`, `fetch`). Mutating tools require `confirm=true`; trades are two-phase.
+The full surface is a stable contract — see [API stability](docs/api-stability.md).
 
 ### Session & account
 

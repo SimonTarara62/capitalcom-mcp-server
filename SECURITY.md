@@ -40,3 +40,8 @@ starts doing something different.
 
 To pin against any change at all, pin the exact package version (see the
 README's "Pinning for production / real-money use" note).
+
+The full policy — what is guaranteed within a major version, what is additive,
+and how deprecations work — is documented in
+[docs/api-stability.md](docs/api-stability.md) and enforced by an automated
+API-surface snapshot test.
