@@ -23,8 +23,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 ENV PATH="/app/node_modules/.bin:$PATH"
 
-# The fix: `uv pip install --system` installs into the uv-managed python without
-# tripping PEP 668 (externally-managed-environment), which blocks plain pip.
-RUN uv pip install --system capitalcom-mcp==0.3.4
+# The fix: install into a fresh uv venv (NOT externally-managed). `--system`
+# resolved to Debian's locked /usr python; a venv sidesteps PEP 668 entirely.
+RUN uv venv /opt/capvenv \
+    && uv pip install --python /opt/capvenv/bin/python capitalcom-mcp==0.3.4
 
 # No ENTRYPOINT/CMD: the CI probes exec the candidate commands explicitly.
