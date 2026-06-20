@@ -304,5 +304,13 @@ with trading + streaming enabled:
 CAP_MCP_E2E=1 pytest -m e2e -v
 ```
 
+## Contributing
+
+Contributions are welcome — this is a community project. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md), browse
+[good first issues](docs/good-first-issues.md), and see the
+[roadmap](ROADMAP.md) for where it's heading. The architecture and a worked
+"add a tool" example are in [docs/extending.md](docs/extending.md).
+
 ## License
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

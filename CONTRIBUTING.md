@@ -4,6 +4,10 @@ Thanks for your interest in improving the Capital.com MCP server! This project i
 a thin [FastMCP](https://github.com/jlowin/fastmcp) layer over the
 [`capitalcom-cli`](https://github.com/SimonTarara62/capitalcom-cli) SDK.
 
+**New here?** Pick a [good first issue](docs/good-first-issues.md), skim the
+[architecture & extension guide](docs/extending.md), and see where the project
+is heading on the [roadmap](ROADMAP.md).
+
 ## Ground rules
 
 - Be respectful — see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
@@ -31,6 +35,9 @@ CAP_MCP_E2E=1 pytest -m e2e -v
 ```
 
 ## Adding a new tool
+
+The short version is below; for the architecture, a worked example, and the
+testing patterns, see [docs/extending.md](docs/extending.md).
 
 1. Add an `@mcp.tool()` async function in `capital_mcp/server.py` that delegates
    to the SDK facade (`get_app().<service>...`). Mutations must require
