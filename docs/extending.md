@@ -67,6 +67,9 @@ MCP client ──▶ capital_mcp/server.py        @mcp.tool() async functions
    - `client` is an in-memory FastMCP client (no network, no credentials).
    - `fake_app` is a `CapitalComApp` whose services are `AsyncMock`s — set
      `return_value`/`side_effect` and assert the call.
+   - Both live in `tests/conftest.py`. The `client` fixture already depends on
+     `patch_app`, which wires `fake_app` into the server — so just request both
+     `client` and `fake_app` by name and pytest resolves the dependency chain.
 
 4. **Register e2e coverage.** Add an e2e test under `tests/e2e/` and map the
    tool in `tests/e2e/coverage.py`. The offline test `tests/test_e2e_coverage.py`
