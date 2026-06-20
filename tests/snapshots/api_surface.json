@@ -1,33 +1,81 @@
 {
   "prompts": {
     "execute_trade": [
-      "preview_id"
+      {
+        "name": "preview_id",
+        "required": false
+      }
     ],
     "live_portfolio_monitor": [
-      "alert_pnl_threshold",
-      "duration_minutes"
+      {
+        "name": "alert_pnl_threshold",
+        "required": false
+      },
+      {
+        "name": "duration_minutes",
+        "required": false
+      }
     ],
     "live_price_monitor": [
-      "duration_minutes",
-      "epics",
-      "threshold_percent"
+      {
+        "name": "duration_minutes",
+        "required": false
+      },
+      {
+        "name": "epics",
+        "required": false
+      },
+      {
+        "name": "threshold_percent",
+        "required": false
+      }
     ],
     "market_scan": [
-      "lookback_periods",
-      "timeframe",
-      "watchlist_id"
+      {
+        "name": "lookback_periods",
+        "required": false
+      },
+      {
+        "name": "timeframe",
+        "required": false
+      },
+      {
+        "name": "watchlist_id",
+        "required": false
+      }
     ],
     "position_review": [],
     "real_time_alerts": [
-      "alert_config",
-      "auto_stop",
-      "duration_minutes"
+      {
+        "name": "alert_config",
+        "required": false
+      },
+      {
+        "name": "auto_stop",
+        "required": false
+      },
+      {
+        "name": "duration_minutes",
+        "required": false
+      }
     ],
     "trade_proposal": [
-      "direction",
-      "epic",
-      "risk_percent",
-      "thesis"
+      {
+        "name": "direction",
+        "required": false
+      },
+      {
+        "name": "epic",
+        "required": true
+      },
+      {
+        "name": "risk_percent",
+        "required": false
+      },
+      {
+        "name": "thesis",
+        "required": false
+      }
     ]
   },
   "resource_templates": [

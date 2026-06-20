@@ -25,7 +25,13 @@ async def build_surface(client) -> dict:
         "resources": sorted(str(r.uri) for r in resources),
         "resource_templates": sorted(t.uriTemplate for t in templates),
         "prompts": {
-            p.name: sorted(a.name for a in (p.arguments or []))
+            p.name: sorted(
+                (
+                    {"name": a.name, "required": bool(getattr(a, "required", False))}
+                    for a in (p.arguments or [])
+                ),
+                key=lambda a: a["name"],
+            )
             for p in sorted(prompts, key=lambda x: x.name)
         },
     }

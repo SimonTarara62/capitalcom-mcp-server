@@ -30,6 +30,14 @@ Requires a **major** bump:
   major and emits a deprecation note) and is always recorded in
   [CHANGELOG.md](../CHANGELOG.md).
 
+**Scope.** This contract covers the **shape of the interface**: tool, resource,
+and prompt **names**; each tool's **input parameters** (names, types, and
+defaults); and each prompt's **arguments** (names and whether they are
+required). It does **not** freeze the *values* or shape of data returned from
+the live Capital.com API — those reflect the upstream API — nor the exact
+*wording* of human-readable descriptions, which may be refined without a major
+bump.
+
 ## How it is enforced
 
 The surface is locked by an automated snapshot
