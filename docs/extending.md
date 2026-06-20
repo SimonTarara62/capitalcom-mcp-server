@@ -19,7 +19,7 @@ MCP client ──▶ capital_mcp/server.py        @mcp.tool() async functions
               capital_cli SDK facade         app.markets / accounts / trading /
                      │                       watchlists / stream / session
                      ▼
-              capital_mcp/serialization.py   *_to_dict helpers → JSON-safe dicts
+              capital_mcp/serialization.py   optional helpers (e.g. preview_to_dict)
 ```
 
 - **`server.py`** holds every tool, resource, and prompt. Tools never talk to
@@ -27,8 +27,9 @@ MCP client ──▶ capital_mcp/server.py        @mcp.tool() async functions
 - **`context.py`** owns the single `CapitalComApp`. It is built lazily so the
   server can start and be introspected **without credentials**. Always go
   through `get_app()`.
-- **`serialization.py`** converts SDK models into plain `dict[str, Any]` so
-  every tool returns JSON-safe data.
+- **`serialization.py`** holds small helpers (e.g. `preview_to_dict`) for the
+  few flows whose SDK result needs flattening into the tool's response shape.
+  **Most tools return the SDK's dict directly** — it is already JSON-safe.
 
 ## Add a read-only tool (the common case)
 
@@ -40,12 +41,11 @@ MCP client ──▶ capital_mcp/server.py        @mcp.tool() async functions
        """One-line description shown to MCP clients."""
        app = get_app()
        await app.session.ensure_logged_in()   # guard: all user-facing tools log in lazily
-       result = await app.markets.example(epic)   # call the SDK facade
-       return market_to_dict(result)              # serialize to a JSON-safe dict
+       return await app.markets.example(epic)  # the SDK returns a JSON-safe dict
    ```
 
    Real examples to copy from: `cap_market_get` (`server.py`), `cap_market_sentiment`,
-   `cap_account_list`.
+   `cap_account_list`. These return the SDK's dict as-is. When a result needs reshaping into a flatter response — as the trade-preview tools do — add a helper in `serialization.py` and call it; see `preview_to_dict` used by `cap_trade_preview_position`.
 
 2. **Mutations require confirmation.** Any tool with a side effect takes
    `confirm: bool = False` and the SDK enforces the gate. See
