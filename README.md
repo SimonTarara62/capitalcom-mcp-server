@@ -17,6 +17,7 @@ Windsurf · ChatGPT — any MCP client.
 [![CI](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/SimonTarara62/capitalcom-mcp-server/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-0098FF)](https://registry.modelcontextprotocol.io/?search=io.github.SimonTarara62/capitalcom-mcp-server)
+[![Glama quality score](https://glama.ai/mcp/servers/nmcob5apit/badges/score.svg)](https://glama.ai/mcp/servers/nmcob5apit)
 [![PyPI downloads](https://img.shields.io/pypi/dm/capitalcom-mcp.svg)](https://pypi.org/project/capitalcom-mcp/)
 
 > ⚠️ **Unofficial & educational.** Not affiliated with Capital.com. Trading is
