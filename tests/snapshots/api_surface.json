@@ -1,0 +1,1105 @@
+{
+  "prompts": {
+    "execute_trade": [
+      "preview_id"
+    ],
+    "live_portfolio_monitor": [
+      "alert_pnl_threshold",
+      "duration_minutes"
+    ],
+    "live_price_monitor": [
+      "duration_minutes",
+      "epics",
+      "threshold_percent"
+    ],
+    "market_scan": [
+      "lookback_periods",
+      "timeframe",
+      "watchlist_id"
+    ],
+    "position_review": [],
+    "real_time_alerts": [
+      "alert_config",
+      "auto_stop",
+      "duration_minutes"
+    ],
+    "trade_proposal": [
+      "direction",
+      "epic",
+      "risk_percent",
+      "thesis"
+    ]
+  },
+  "resource_templates": [
+    "cap://market-cache/{epic}"
+  ],
+  "resources": [
+    "cap://allowed-epics",
+    "cap://risk-policy",
+    "cap://status"
+  ],
+  "tools": {
+    "cap_account_demo_topup": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "amount"
+      ],
+      "type": "object"
+    },
+    "cap_account_history_activity": {
+      "additionalProperties": false,
+      "properties": {
+        "deal_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "detailed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "from_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_period": {
+          "default": 600,
+          "type": "integer"
+        },
+        "to_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "cap_account_history_transactions": {
+      "additionalProperties": false,
+      "properties": {
+        "from_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_period": {
+          "default": 600,
+          "type": "integer"
+        },
+        "to_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "cap_account_list": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_account_preferences_get": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_account_preferences_set": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "hedging_mode": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "leverages": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "cap_market_get": {
+      "additionalProperties": false,
+      "properties": {
+        "epic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "epic"
+      ],
+      "type": "object"
+    },
+    "cap_market_navigation_node": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id"
+      ],
+      "type": "object"
+    },
+    "cap_market_navigation_root": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_market_prices": {
+      "additionalProperties": false,
+      "properties": {
+        "epic": {
+          "type": "string"
+        },
+        "from_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max": {
+          "default": 200,
+          "type": "integer"
+        },
+        "resolution": {
+          "default": "MINUTE_15",
+          "type": "string"
+        },
+        "to_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "epic"
+      ],
+      "type": "object"
+    },
+    "cap_market_search": {
+      "additionalProperties": false,
+      "properties": {
+        "epics": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "limit": {
+          "default": 50,
+          "type": "integer"
+        },
+        "search_term": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "cap_market_sentiment": {
+      "additionalProperties": false,
+      "properties": {
+        "market_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "market_id"
+      ],
+      "type": "object"
+    },
+    "cap_session_login": {
+      "additionalProperties": false,
+      "properties": {
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "force": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "cap_session_logout": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_session_ping": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_session_status": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_session_switch_account": {
+      "additionalProperties": false,
+      "properties": {
+        "account_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "account_id"
+      ],
+      "type": "object"
+    },
+    "cap_stream_alerts": {
+      "additionalProperties": false,
+      "properties": {
+        "alerts": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "auto_close": {
+          "default": false,
+          "type": "boolean"
+        },
+        "duration_s": {
+          "default": 300.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "alerts"
+      ],
+      "type": "object"
+    },
+    "cap_stream_candles": {
+      "additionalProperties": false,
+      "properties": {
+        "bar_type": {
+          "default": "classic",
+          "type": "string"
+        },
+        "duration_s": {
+          "default": 300.0,
+          "type": "number"
+        },
+        "epics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "resolutions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "update_interval_s": {
+          "default": 1.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "epics",
+        "resolutions"
+      ],
+      "type": "object"
+    },
+    "cap_stream_portfolio": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_s": {
+          "default": 300.0,
+          "type": "number"
+        },
+        "update_interval_s": {
+          "default": 5.0,
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "cap_stream_prices": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_s": {
+          "default": 300.0,
+          "type": "number"
+        },
+        "epics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "update_interval_s": {
+          "default": 1.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "epics"
+      ],
+      "type": "object"
+    },
+    "cap_trade_confirm_get": {
+      "additionalProperties": false,
+      "properties": {
+        "deal_reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deal_reference"
+      ],
+      "type": "object"
+    },
+    "cap_trade_confirm_wait": {
+      "additionalProperties": false,
+      "properties": {
+        "deal_reference": {
+          "type": "string"
+        },
+        "poll_interval_ms": {
+          "default": 500,
+          "type": "integer"
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "deal_reference"
+      ],
+      "type": "object"
+    },
+    "cap_trade_execute_position": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "preview_id": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "preview_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_execute_working_order": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "preview_id": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "preview_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_orders_amend": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "deal_id": {
+          "type": "string"
+        },
+        "good_till_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deal_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_orders_cancel": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "deal_id": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deal_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_orders_list": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_trade_positions_amend": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "deal_id": {
+          "type": "string"
+        },
+        "guaranteed_stop": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "trailing_stop": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deal_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_positions_close": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "deal_id": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "default": 15.0,
+          "type": "number"
+        },
+        "wait_for_confirm": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deal_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_positions_get": {
+      "additionalProperties": false,
+      "properties": {
+        "deal_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deal_id"
+      ],
+      "type": "object"
+    },
+    "cap_trade_positions_list": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_trade_preview_position": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string"
+        },
+        "epic": {
+          "type": "string"
+        },
+        "guaranteed_stop": {
+          "default": false,
+          "type": "boolean"
+        },
+        "profit_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "size": {
+          "type": "number"
+        },
+        "stop_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trailing_stop": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "epic",
+        "direction",
+        "size"
+      ],
+      "type": "object"
+    },
+    "cap_trade_preview_working_order": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string"
+        },
+        "epic": {
+          "type": "string"
+        },
+        "good_till_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "guaranteed_stop": {
+          "default": false,
+          "type": "boolean"
+        },
+        "level": {
+          "type": "number"
+        },
+        "profit_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "profit_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "size": {
+          "type": "number"
+        },
+        "stop_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_distance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stop_level": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trailing_stop": {
+          "default": false,
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "epic",
+        "direction",
+        "type",
+        "level",
+        "size"
+      ],
+      "type": "object"
+    },
+    "cap_watchlists_add_market": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "epic": {
+          "type": "string"
+        },
+        "watchlist_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "watchlist_id",
+        "epic"
+      ],
+      "type": "object"
+    },
+    "cap_watchlists_create": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "cap_watchlists_delete": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "watchlist_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "watchlist_id"
+      ],
+      "type": "object"
+    },
+    "cap_watchlists_get": {
+      "additionalProperties": false,
+      "properties": {
+        "watchlist_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "watchlist_id"
+      ],
+      "type": "object"
+    },
+    "cap_watchlists_list": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "cap_watchlists_remove_market": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        },
+        "epic": {
+          "type": "string"
+        },
+        "watchlist_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "watchlist_id",
+        "epic"
+      ],
+      "type": "object"
+    },
+    "fetch": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "search": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    }
+  }
+}

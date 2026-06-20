@@ -1,4 +1,4 @@
-.PHONY: install test cov lint fmt typecheck run e2e check
+.PHONY: install test cov lint fmt typecheck run e2e check snapshot
 
 install:
 	pip install -e ".[dev]"
@@ -25,3 +25,6 @@ e2e:
 	CAP_MCP_E2E=1 pytest -m e2e -v
 
 check: lint typecheck test
+
+snapshot: ## regenerate the frozen API-surface golden (after an intentional change)
+	UPDATE_SNAPSHOT=1 python -m pytest tests/test_api_surface_snapshot.py -q
