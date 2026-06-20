@@ -27,4 +27,4 @@ e2e:
 check: lint typecheck test
 
 snapshot: ## regenerate the frozen API-surface golden (after an intentional change)
-	UPDATE_SNAPSHOT=1 python -m pytest tests/test_api_surface_snapshot.py -q
+	UPDATE_SNAPSHOT=1 pytest tests/test_api_surface_snapshot.py -q

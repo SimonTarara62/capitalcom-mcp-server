@@ -34,7 +34,8 @@ async def build_surface(client) -> dict:
 async def test_surface_counts(client):
     surface = await build_surface(client)
     assert len(surface["tools"]) == 42
-    assert len(surface["resources"]) + len(surface["resource_templates"]) == 4
+    assert len(surface["resources"]) == 3
+    assert len(surface["resource_templates"]) == 1
     assert len(surface["prompts"]) == 7
 
 
