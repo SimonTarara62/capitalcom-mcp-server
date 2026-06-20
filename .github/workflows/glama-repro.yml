@@ -1,0 +1,40 @@
+name: Glama Dockerfile repro
+
+# Manual only: builds a faithful copy of Glama's generated image and probes which
+# inner server command works, to derive the correct Glama Build step + CMD.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  glama-repro:
+    name: build Glama-replica image + probe inner command
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build the Glama-replica image
+        run: docker build -f ci/glama-repro.Dockerfile -t capitalcom-mcp:glama-repro .
+      - name: Probe A - console script (capitalcom-mcp ...)
+        run: |
+          set +e
+          OUT=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"diag","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+            | timeout 60 docker run --rm -i capitalcom-mcp:glama-repro capitalcom-mcp run --transport stdio 2>/tmp/a.err)
+          echo "$OUT" | python3 -c "import sys,json; ms=[json.loads(l) for l in sys.stdin if l.strip().startswith('{')]; n=next((len(m.get('result',{}).get('tools',[])) for m in ms if m.get('id')==2),0); print('CONSOLE_SCRIPT_TOOLS='+str(n))"
+          echo '--- console-script stderr (first 8 lines) ---'; head -8 /tmp/a.err || true
+      - name: Probe B - module (python -m capital_mcp ...)
+        run: |
+          set +e
+          OUT=$(printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"diag","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' \
+            | timeout 60 docker run --rm -i capitalcom-mcp:glama-repro python -m capital_mcp run --transport stdio 2>/tmp/b.err)
+          echo "$OUT" | python3 -c "import sys,json; ms=[json.loads(l) for l in sys.stdin if l.strip().startswith('{')]; n=next((len(m.get('result',{}).get('tools',[])) for m in ms if m.get('id')==2),0); print('MODULE_TOOLS='+str(n))"
+          echo '--- module stderr (first 8 lines) ---'; head -8 /tmp/b.err || true
+      - name: Summary
+        run: echo "Whichever of CONSOLE_SCRIPT_TOOLS / MODULE_TOOLS is >=40 is the inner command to use in Glama's CMD. If the build step above failed, the build step / Glama template is the problem."
