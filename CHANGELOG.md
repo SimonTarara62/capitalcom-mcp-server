@@ -6,6 +6,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- API-surface snapshot test (`tests/test_api_surface_snapshot.py`) and a
+  published stability contract (`docs/api-stability.md`) freezing the 42 tools,
+  4 resources, and 7 prompts. The surface is now enforced in CI.
+
 ## [0.3.4] - 2026-06-15
 
 ### Added

@@ -40,6 +40,11 @@ CAP_MCP_E2E=1 pytest -m e2e -v
    `tests/e2e/coverage.py` (the coverage-registry test enforces 100% tool
    coverage).
 4. Document the tool in the README "What's inside" tables.
+5. The public API surface is frozen by `tests/test_api_surface_snapshot.py`.
+   Adding a new tool is additive and expected — regenerate the golden with
+   `make snapshot` and mention the addition in `CHANGELOG.md`. Renaming or
+   removing an existing tool is a breaking change: see
+   [docs/api-stability.md](docs/api-stability.md).
 
 ## Pull requests
 
