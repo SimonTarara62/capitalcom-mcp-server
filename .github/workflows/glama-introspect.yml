@@ -13,7 +13,7 @@ jobs:
     name: build image + tools/list (credential-free)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Build the image (as Glama does)
         run: docker build -t capitalcom-mcp:diag .
       - name: Introspect over stdio with no credentials
