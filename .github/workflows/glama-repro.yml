@@ -13,7 +13,7 @@ jobs:
     name: build Glama-replica image + probe inner command
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Build the Glama-replica image
         run: docker build -f ci/glama-repro.Dockerfile -t capitalcom-mcp:glama-repro .
       - name: Probe A - console script (capitalcom-mcp ...)
